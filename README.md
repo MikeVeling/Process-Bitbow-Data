@@ -23,7 +23,7 @@ This file converts between the 45 separate neurons in the input files and the ne
 ### Active_hemisegments.csv 
 This file allows you to limit the hemisemgments you would like to study. This allows you to test hypothesizes about development timing per hemisegment by limiting the data analysis to only particular hemisgements.
 
-### Process brainbow.py: 
+### Process brainbow.py
 code for running the analysis. This code was run in python 2.7.11 with the following dependency packages:
 
 itertools, sys, json, statsmodels, operator, numpy, scipy, random, collections, csv, math, os, multiprocessing, and time.
