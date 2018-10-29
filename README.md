@@ -9,7 +9,7 @@ The following sections describe the input, execution, and outputs of this analys
 
 Input (folder): This folder contains all the input files in CSV format for analysis. Each of these input files contain coded brainbow data for each of the neurons for each hemisegment analyzed. The first line describes the columns.
 
-<br><b>Date:</b> the date the larva was imaged
+<b>Date:</b> the date the larva was imaged
 <br><b>Larva #:</b> denotes the larva ID that was imaged on that given day 
 <br><b>Segment:</b> the hemisgement that was analyzed
 <br><b>Body side:</b> the side of the body wall the hemisgement came from.
