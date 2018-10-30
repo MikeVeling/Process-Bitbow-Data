@@ -49,4 +49,28 @@ This code unfortunately runs with no arguments because variables are coded withi
 
 This program outputs an <b>output</b> folder and several subfolders. These subfolders contain detailed information on the analysis performed on subsets of the data. This is important for establishing the reproducibility of the data across replicates. Therefore, it is important to describe the repeating folder structure in some detail as to familiarize yourself with the most relevant outputs for your study.
 
+<b>Output [active hemisegments]</b>
+   <b>[input_file_name folders]</b>
+      <b>all_data</b>
+         <b>[see all data below]⋅</b>
+      <b>[date folders]</b>
+         <b>all_data</b>
+            <b>[see all data below]⋅</b>
+         <b>[larva folders]</b>
+            <b>[see all data below]⋅</b>
+
+<b>all_data</b>
+   <b>color_number_stats.csv</b>
+   <b>color_stats.csv</b>
+   <b>group_color_stats.csv</b>
+   <b>[neuron grouping layer folder]</b>
+      <b>by_the_colors.csv</b>
+      <b>FDR_matrix.csv</b>
+      <b>pval_dic.json</b>
+      <b>pval_matrix.csv</b>
+      <b>Match_fraction_matrix.csv</b>
+      <b>Match_precent_matrix.csv</b>
+
+
 <b>Output [active hemisegments]</b>: This is the root folder for an analysis performed on a set of hemisegments. By default this is simply set to all hemisegments. To change this simply provide your hemisgements list in the <b>Active_hemisegments.csv</b>.
+<b>[input_file_name folders]</b>: These folders are nexted within the 
