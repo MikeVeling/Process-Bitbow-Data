@@ -10,17 +10,17 @@ include_pvalue_larva=False                                                      
 include_conditions_in_flaten=False                                              # Boolean allowing for the generation of a set of flat files containing all larva level data in the input file level output
 include_date_in_flaten=False                                                    # Boolean allowing for the generation of a set of flat files containing all larva level data in the date level output
 include_larva_in_flaten=False                                                   # Boolean allowing for the generation of a set of flat files containing all larva level data in the larva level output
-include_randomized_match_data=True                                              # Boolean allowing for the inclution of randomized match data in the by_the_colors.csv output. This is useful for comparing match numbers to the number of times neurons randomly matched
+include_randomized_match_data=True                                              # Boolean allowing for the inclusion of randomized match data in the by_the_colors.csv output. This is useful for comparing match numbers to the number of times neurons randomly matched
 random_only_colors=True                                                         # Boolean determining if only neurons with color are randomized
 test_stat='sort_of_probibility_of_matches'                                      # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_times_misses' or 'percent_match'
-Multiple_hypothesis_method='fdr_bh'                                             # This var enharits its testing methoid from statsmodels.stats.multitest.multipletests
+Multiple_hypothesis_method='fdr_bh'                                             # This var inherits its testing method from statsmodels.stats.multitest.multipletests
 alpha_level=0.05                                                                # This var sets the alpha level for statsmodels.stats.multitest.multipletests
-number_of_p_val_itterations=100                                                 # This is the number of itterations used to generate the background distribution. It is set to 100 so the code can run on most computers, but I reccomend at least 100,000 for real analysis. 
-itteration_print=100                                                            # How many itterations do you want to run per thread. With my i7 5820 12 core 100 was about the right number for about 4 to 6 min of processing time
-Thread_multiplyer=1                                                             # how many simultious jobs do you want to run based on the number of threads your computer has. Default is 1 meaing it will use all of your threads.
-Thread_offset=0                                                                 # how many extra jobs do you want to run above the number of cores you have. This can also be negitive to allow for running of other programs while this is running.
+number_of_p_val_itterations=100                                                 # This is the number of iterations used to generate the background distribution. It is set to 100 so the code can run on most computers, but I recommend at least 100,000 for real analysis. 
+itteration_print=100                                                            # How many iterations do you want to run per thread. With my i7 5820 12 core 100 was about the right number for about 4 to 6 min of processing time
+Thread_multiplyer=1                                                             # how many simulations jobs do you want to run based on the number of threads your computer has. Default is 1 meaning it will use all of your threads.
+Thread_offset=0                                                                 # how many extra jobs do you want to run above the number of cores you have. This can also be negative to allow for running of other programs while this is running.
 multithread_sleep_time=1                                                        # how often should python check for finished jobs
-verbose_multithread_worker_search=True                                          # Should python tell you while it is searching for idle worksers
+verbose_multithread_worker_search=True                                          # Should python tell you while it is searching for idle workers
 only_include_some_segments=True                                                 # When False, this will simply perform all the hemisegment analysis
 path_of_key_file='key.csv'                                                      # Pathway of the key.csv file
 included_hemisegments_path='Active_hemisegments.csv'                            # pathway of the active_hemisegments.csv file
@@ -55,7 +55,7 @@ class basefunctions:                                                            
             flat_data_table.append(hemisegment_object.neuron_data)              #
         self.flat_data_table=flat_data_table                                    #
         return flat_data_table                                                  #
-    def get_flat_color_list(self):                                              #Here, I define functions to get flat data about the colors observed. It also updates universal numbers used in the dataset like number of neurons observed and number of neurons with color
+    def get_flat_color_list(self):                                              # Here, I define functions to get flat data about the colors observed. It also updates universal numbers used in the dataset like number of neurons observed and number of neurons with color
         self.number_of_neurons_not_observed=0                                   #
         self.total_neurons_observed=0                                           #
         self.total_neurons_with_any_color=0                                     #
@@ -73,7 +73,7 @@ class basefunctions:                                                            
                 if active_chanels != 0:                                         #
                     self.total_neurons_with_any_color+=1                        #
         return flat_data                                                        #
-    def make_color_number_stats(self):                                          #This function uses the flat data generated ablve and makes the color_number_stats output
+    def make_color_number_stats(self):                                          # This function uses the flat data generated ablve and makes the color_number_stats output
         flat_data=self.get_flat_color_list()                                    #
         output_file=[['total number of chanels with color',                     #
                       'Total with given number of colors',                      #
@@ -93,7 +93,7 @@ class basefunctions:                                                            
                        str(self.total_neurons_with_any_color)]                  #
             output_file.append(next_line)                                       #
         return output_file                                                      #
-    def make_color_stats(self):                                                 #This function uses the flat data generated ablve and makes the color_stats output
+    def make_color_stats(self):                                                 # This function uses the flat data generated ablve and makes the color_stats output
         flat_data=self.get_flat_color_list()                                    #
         output_file=[['',                                                       #
                       'Color chanel 1',                                         #
@@ -133,7 +133,7 @@ class basefunctions:                                                            
                    str(self.total_neurons_with_any_color)]                      #
         output_file.append(next_line)                                           #
         return output_file                                                      #
-    def make_group_color_stats(self):                                           #This function uses the flat data generated ablve and makes the color_group_stats output
+    def make_group_color_stats(self):                                           # This function uses the flat data generated ablve and makes the color_group_stats output
         if hasattr(self, 'group_color_stat_output'):                            #
             return self.group_color_stat_output                                 #
         flat_data=self.get_flat_color_list()                                    #
@@ -926,7 +926,7 @@ def exists(directory):                                                          
         return True                                                             #
     except:                                                                     #
         return False                                                            #
-def mkdir(directory):                                                           #This function makes a directory if it does not exist
+def mkdir(directory):                                                           # This function makes a directory if it does not exist
     if not exists(directory):                                                   #
         if directory[-1]=='\\' or directory[-1]=='/':                           #
             directory_edit=directory[0:-1]                                      #
@@ -1131,7 +1131,7 @@ def make_by_the_colors_output(data_object,                                      
             corrected_p_val_dic[pair_name]=row[p_val_col_corrected]             #
         neuron_A_name=pair_name.split(' to ')[0]                                #
     neuron_num=len(list_of_neurons)                                             #
-    assert neuron_num*(neuron_num-1)/2+neuron_num+1 == len(output_table)        #makes sure all the neurons are accounted for
+    assert neuron_num*(neuron_num-1)/2+neuron_num+1 == len(output_table)        # makes sure all the neurons are accounted for
     if include_pvalues:                                                         #
         p_val_outputs=[['']+list_of_neurons]                                    #
         p_val_corected_outputs=[['']+list_of_neurons]                           #
@@ -1499,26 +1499,26 @@ if __name__ == "__main__":                                                      
         if list_of_input_files == []:                                           #
             print('Plese put your input files in the Input folder')             #
             sys.exit(0)                                                         #
-        conditions_dic={}                                                       #These dictionarys will serve as look up tables for particular objects
+        conditions_dic={}                                                       # These dictionarys will serve as look up tables for particular objects
         dates_dic={}                                                            #
         larvae_dic={}                                                           #
         hemisegments_dic={}                                                     #
-        for input_file in list_of_input_files:                                  #itterate through all condition input files
+        for input_file in list_of_input_files:                                  # itterate through all condition input files
             if input_file[-4:]=='.csv':                                         #
-                working_input_file_path=input_file_path+input_file              #grabbing the full path of the file I would like to work with
-                condition_str=input_file[0:-4]                                  #defining the key that will identify this condition file in the conditions dic
-                conditions_dic[condition_str]=condition(condition_str)          #defining my condition object
-                working_data=the_opener(working_input_file_path)                #import the data from a CSV to a list of lists
-                for row in working_data[1:]:                                    #now I itterate through the current condition file I have open extracting data like date, larva, and segment information
+                working_input_file_path=input_file_path+input_file              # grabbing the full path of the file I would like to work with
+                condition_str=input_file[0:-4]                                  # defining the key that will identify this condition file in the conditions dic
+                conditions_dic[condition_str]=condition(condition_str)          # defining my condition object
+                working_data=the_opener(working_input_file_path)                # import the data from a CSV to a list of lists
+                for row in working_data[1:]:                                    # now I itterate through the current condition file I have open extracting data like date, larva, and segment information
                     simple_date_str=row[0]                                      #
                     simple_larva_str=row[1]                                     #
                     simple_hemisegment_str=row[2]+'_'+row[3]                    #
                     if ((not only_include_some_segments) or                     #
                       (check_if_in(simple_hemisegment_str, included_segments))):#
-                        date_str=condition_str+'|||'+simple_date_str            #As I am going to require uneque identifiers for all different types of objects, I concatanate the names as the objects become more and more spicific, starting with concatinating the condition object key with the date object key
+                        date_str=condition_str+'|||'+simple_date_str            # As I am going to require uneque identifiers for all different types of objects, I concatanate the names as the objects become more and more spicific, starting with concatinating the condition object key with the date object key
                         larva_str=date_str+'|||'+simple_larva_str               #
                         hemisegment_str=larva_str+'|||'+simple_hemisegment_str  #
-                        if date_str not in dates_dic:                           #In the next set of lines, I define objects if they have not yet been defined.
+                        if date_str not in dates_dic:                           # In the next set of lines, I define objects if they have not yet been defined.
                             dates_dic[date_str]=date(date_str,                  #
                                                   conditions_dic[condition_str])#
                         if larva_str not in larvae_dic:                         #
