@@ -43,7 +43,149 @@ Once these packages are installed to your python environment, you should be able
 python Process_brainbow.py
 ```
 
-This code unfortunately runs with no arguments because variables are coded within the script (see first lines in the script). If this code becomes more popular, I could easily edit the code to accept arguments from the command line. If you would like to edit the running parameters, please see the code for further details on the editable variables or contact [me](mailto:mike.veling@gmail.com) for further clarification.
+There are also many varables that can be tweeked to process the data your way. Many of these varables are quite spicific and technical so do not hesitate to contact [me](mailto:mike.veling@gmail.com) about them.
+
+```
+python Process_brainbow.py -h
+
+usage: Process brainbow.py [-h] [-i INPUT_DIR_PATH] [-o OUTPUT_DIR_PATH]
+                           [-k PATH_OF_KEY_FILE]
+                           [-hemi_path INCLUDED_HEMISEGMENTS_PATH]
+                           [-ts TEST_STAT] [-mh MULTIPLE_HYPOTHESIS_METHOD]
+                           [-mh_alpha ALPHA_LEVEL]
+                           [-itter NUMBER_OF_P_VAL_ITTERATIONS]
+                           [-itter_print ITTERATION_PRINT]
+                           [-thread_mult THREAD_MULTIPLYER]
+                           [-thread_offset THREAD_OFFSET]
+                           [-thread_sleep MULTITHREAD_SLEEP_TIME]
+                           [-exclude_neuron_layers EXCLUDE_COLOR_LAYERS [EXCLUDE_COLOR_LAYERS ...]]
+                           [-include_larva_data_conditions]
+                           [-include_larva_data_dates]
+                           [-include_by_the_larva_outputs]
+                           [-dont_include_pvalue_conditions]
+                           [-include_pvalue_dates] [-include_pvalue_larva]
+                           [-include_conditions_in_flaten]
+                           [-include_date_in_flaten]
+                           [-include_larva_in_flaten]
+                           [-dont_include_randomized_match_data]
+                           [-random_only_colors]
+                           [-silent_multithread_worker_search]
+                           [-only_include_some_segments]
+
+For processing Brainbow data.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT_DIR_PATH, --input_dir_path INPUT_DIR_PATH
+                        Provide the path for the folder containing the
+                        inputs (default is .\input)
+  -o OUTPUT_DIR_PATH, --output_dir_path OUTPUT_DIR_PATH
+                        Provide the path for the folder you want to contain
+                        the outputs, (default is .\)
+  -k PATH_OF_KEY_FILE, --path_of_key_file PATH_OF_KEY_FILE
+                        Provide the path for the key.csv file (default is .\key.csv)
+  -hemi_path INCLUDED_HEMISEGMENTS_PATH, --included_hemisegments_path INCLUDED_HEMISEGMENTS_PATH
+                        Provide the path for the active_hemisgments.csv
+                        file (default is .\Active_hemisegments.csv).
+                        Note this is required if the
+                        -only_include_some_segments is used
+  -ts TEST_STAT, --test_stat TEST_STAT
+                        What test stat do you want to use(default is 2
+                        "sort_of_probibility_of_matches" that was used in
+                        the paper)?
+
+                                1:number_of_matches
+                                2:sort_of_probibility_of_matches
+                                3:sort_of_prob_of_matches_times_misses
+                                4:percent_match
+                        |
+  -mh MULTIPLE_HYPOTHESIS_METHOD, --Multiple_hypothesis_method MULTIPLE_HYPOTHESIS_METHOD
+                        This var inherits its testing method from
+                        statsmodels.stats.multitest.multipletests (default
+                        is fdr_bh)
+  -mh_alpha ALPHA_LEVEL, --alpha_level ALPHA_LEVEL
+                        This var sets the alpha level for
+                        statsmodels.stats.multitest.multipletests (default
+                        is 0.05)
+  -itter NUMBER_OF_P_VAL_ITTERATIONS, --number_of_p_val_itterations NUMBER_OF_P_VAL_ITTERATIONS
+                        This is the number of iterations used to generate
+                        the background distribution. It is set to 100 so
+                        the code can run on most computers, but I recommend
+                        at least 100,000 for real analysis.
+  -itter_print ITTERATION_PRINT, --itteration_print ITTERATION_PRINT
+                        How many iterations do you want to run per thread.
+                        With my intel 5820k 12 core 100 was about the right
+                        number for about 4 to 6 min of processing time
+                        (default is 10) .
+  -thread_mult THREAD_MULTIPLYER, --Thread_multiplyer THREAD_MULTIPLYER
+                        how many simulations jobs do you want to run based
+                        on the number of threads your computer has. Default
+                        is 1 meaning it will use all of your threads.
+  -thread_offset THREAD_OFFSET, --Thread_offset THREAD_OFFSET
+                        how many extra jobs do you want to run above the
+                        number of cores you have. This can also be negative
+                        to allow for running of other programs while this
+                        is running. (default is 0)
+  -thread_sleep MULTITHREAD_SLEEP_TIME, --multithread_sleep_time MULTITHREAD_SLEEP_TIME
+                        how often do you want to poll for finished jobs or
+                        idle workers in seconds (default is 1)
+  -exclude_neuron_layers EXCLUDE_COLOR_LAYERS [EXCLUDE_COLOR_LAYERS ...], --exclude_color_layers EXCLUDE_COLOR_LAYERS [EXCLUDE_COLOR_LAYERS ...]
+                        within the key file, you can use this argument to
+                        ignore neuron conversion sets from the key.csv file
+                        (default is nothing)
+  -include_larva_data_conditions
+                        When set, Python will provide a flat by_the_larva
+                        set of outputs collecting all larval level data in
+                        the input file level output
+  -include_larva_data_dates
+                        When set, Python will provide a flat by_the_larva
+                        set of outputs collecting all larval level data in
+                        the date level output
+  -include_by_the_larva_outputs
+                        When set, python will provide a by_the_larva
+                        outputs for the color_stat, group_color_stat, and
+                        color_number_stat output files
+  -dont_include_pvalue_conditions
+                        By default, python will perform the randomization
+                        test to establish p-values. When this is set the
+                        analysis will not be performed
+  -include_pvalue_dates
+                        by default, python does not perform a p-value
+                        analysis by the dates provided in the input files.
+                        When this is set the analysis will happen.
+  -include_pvalue_larva
+                        by default, python does not perform a p-value
+                        analysis by the larva provided in the input files.
+                         When this is set the analysis will happen.
+  -include_conditions_in_flaten
+                        generate a set of flat files containing all larva
+                        level data in the input file level output
+  -include_date_in_flaten
+                        generate a set of flat files containing all larva
+                        level data in the date level output
+  -include_larva_in_flaten
+                        generate a set of flat files containing all larva
+                        level data in the larva level output
+  -dont_include_randomized_match_data
+                        when set, python will not track the randomized
+                        match data. This will speed up the run slight
+  -random_only_colors   |
+                        when set, python will only randomize the data from
+                        neurons that have color. This is a somewhat more
+                        conservative analysis because color expressing
+                        neurons are maintained and was used in the paper
+                        but is turned off by default (recommended to use)
+  -silent_multithread_worker_search
+                        When set, the multithreading run will happen
+                        silently
+  -only_include_some_segments
+                        If used, this will require either an
+                        "Active_hemisegments.csv" file in your main
+                        directory or a -hemi_path to define the path for
+                        it. When used, it will limit the search to only
+                        the active hemisegments listed in the file.
+```
+
 
 ## Outputs
 
