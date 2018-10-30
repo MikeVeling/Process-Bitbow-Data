@@ -23,7 +23,7 @@ This file converts between the 45 separate neurons in the input files and the ne
 ### Active_hemisegments.csv 
 This file allows you to limit the hemisemgments you would like to study. This allows you to test hypothesizes about development timing per hemisegment by limiting the data analysis to only particular hemisgements.
 
-### Process brainbow.py
+### Process_brainbow.py
 code for running the analysis. More details will be provided in the next section.
 
 ## Running the code
@@ -40,7 +40,13 @@ python -m pip install multiprocessing
 Once these packages are installed to your python environment, you should be able to simply run the code with no arguments assuming it is in the same folder as the provided <b>Input</b> folder as well as the provided sample input files. The <b>key.csv</b> and <b>Active_hemisegments.csv</b> also needs to be present in that same folder as is in the git.
 
 ```
-python Process brainbow.py
+python Process_brainbow.py
 ```
 
-This code unfortunately runs with no arguments because variables are coded within the script (see first lines in the script). If this code becomes more popular, I could easily edit the code to accept arguments from the command line. If you would like to edit the running parameters, please see the code for further details on the editable variables.
+This code unfortunately runs with no arguments because variables are coded within the script (see first lines in the script). If this code becomes more popular, I could easily edit the code to accept arguments from the command line. If you would like to edit the running parameters, please see the code for further details on the editable variables or contact [me](mailto:mike.veling@gmail.com) for further clarification.
+
+## Outputs
+
+This program outputs an <b>output</b> folder and several subfolders. These subfolders contain detailed information on the analysis performed on subsets of the data. This is important for establishing the reproducibility of the data across replicates. Therefore, it is important to describe the repeating folder structure in some detail as to familiarize yourself with the most relevant outputs for your study.
+
+<b>Output [active hemisegments]</b>: This is the root folder for an analysis performed on a set of hemisegments. By default this is simply set to all hemisegments. To change this simply provide your hemisgements list in the <b>Active_hemisegments.csv</b>.
