@@ -1,5 +1,14 @@
 #################################################################################
-#                            User editable varables                             #
+#                                defineing the OS                               #
+#################################################################################
+import os                                                                       #
+cwd=os.getcwd()                                                                 #
+if '\\' in cwd:                                                                 #
+    slash='\\'                                                                  #
+else:                                                                           #
+    slash='/'                                                                   #
+#################################################################################
+#                               Default Variables                               #
 #################################################################################
 include_larva_data_conditions=False                                             # Boolean allowing for a by_the_larva output collecting all larval level data in the input file level output
 include_larva_data_dates=False                                                  # Boolean allowing for a by_the_larva output collecting all larval level data in the date level output
@@ -16,15 +25,228 @@ test_stat='sort_of_probibility_of_matches'                                      
 Multiple_hypothesis_method='fdr_bh'                                             # This var inherits its testing method from statsmodels.stats.multitest.multipletests
 alpha_level=0.05                                                                # This var sets the alpha level for statsmodels.stats.multitest.multipletests
 number_of_p_val_itterations=100                                                 # This is the number of iterations used to generate the background distribution. It is set to 100 so the code can run on most computers, but I recommend at least 100,000 for real analysis. 
-itteration_print=100                                                            # How many iterations do you want to run per thread. With my i7 5820 12 core 100 was about the right number for about 4 to 6 min of processing time
+itteration_print=10                                                             # How many iterations do you want to run per thread. With my i7 5820 12 core 100 was about the right number for about 4 to 6 min of processing time
 Thread_multiplyer=1                                                             # how many simulations jobs do you want to run based on the number of threads your computer has. Default is 1 meaning it will use all of your threads.
 Thread_offset=0                                                                 # how many extra jobs do you want to run above the number of cores you have. This can also be negative to allow for running of other programs while this is running.
 multithread_sleep_time=1                                                        # how often should python check for finished jobs
 verbose_multithread_worker_search=True                                          # Should python tell you while it is searching for idle workers
-only_include_some_segments=True                                                 # When False, this will simply perform all the hemisegment analysis
+only_include_some_segments=False                                                # When False, this will simply perform all the hemisegment analysis
 path_of_key_file='key.csv'                                                      # Pathway of the key.csv file
 included_hemisegments_path='Active_hemisegments.csv'                            # pathway of the active_hemisegments.csv file
-exclude_color_layers=['Red','Yellow','Blue','Green','Purple']                   # These are neuron grouping layers that should not be used in the analysis. This allows you to keep a complex key file but maintain a simple analysis
+exclude_color_layers=[]                                                         # These are neuron grouping layers that should not be used in the analysis. This allows you to keep a complex key file but maintain a simple analysis
+input_dir_path='.'+slash+'Input'+slash                                          # default input directory
+output_dir_path='.'+slash                                                       # default output directory
+#################################################################################
+#                           parsing command line input                          #
+#################################################################################
+import argparse                                                                 #
+from argparse import RawTextHelpFormatter                                       #
+parser = argparse.ArgumentParser(description='For processing Brainbow data.',   #
+                                 formatter_class=RawTextHelpFormatter)          #
+parser.add_argument('-i',                                                       #
+                    '--input_dir_path',                                         #
+                    action='store',                                             #
+                    type=str,                                                   #
+                    help='Provide the path for the folder containing the\n'     #
+                         'inputs (default is .'+slash+'input)')                 #
+parser.add_argument('-o',                                                       #
+                    '--output_dir_path',                                        #
+                    action='store',                                             #
+                    type=str,                                                   #
+                    help='Provide the path for the folder you want to contain\n'#
+                         'the outputs, (default is .'+slash+')')                #    
+parser.add_argument('-k',                                                       #
+                    '--path_of_key_file',                                       #
+                    action='store',                                             #
+                    type=str,                                                   #
+                    help='Provide the path for the key.csv file (default is .'+ #
+                         slash+'key.csv)')                                      #
+parser.add_argument('-hemi_path',                                               #
+                    '--included_hemisegments_path',                             #
+                    action='store',                                             #
+                    type=str,                                                   #
+                    help='Provide the path for the active_hemisgments.csv\n'    #
+                         'file (default is .'+slash+'Active_hemisegments.csv).' #
+                         '\nNote this is required if the\n'                     #
+                         '-only_include_some_segments is used')                 #
+parser.add_argument('-ts',                                                      #
+                    '--test_stat',                                              #
+                    action='store',                                             #
+                    type=int,                                                   #
+                    help='What test stat do you want to use(default is 2\n'     #
+                         '"sort_of_probibility_of_matches" that was used in\n'  #
+                         'the paper)?\n\n'+                                     #
+                    '\t1:number_of_matches\n'+                                  #
+                    '\t2:sort_of_probibility_of_matches\n'+                     #
+                    '\t3:sort_of_prob_of_matches_times_misses\n'+               #
+                    '\t4:percent_match\n|')                                     #
+parser.add_argument('-mh',                                                      #
+                    '--Multiple_hypothesis_method',                             #
+                    action='store',                                             #
+                    type=str,                                                   #
+                    help='This var inherits its testing method from\n'          #
+                         'statsmodels.stats.multitest.multipletests (default\n' #
+                         'is fdr_bh)')                                          #
+parser.add_argument('-mh_alpha',                                                #
+                    '--alpha_level',                                            #
+                    action='store',                                             #
+                    type=float,                                                 #
+                    help='This var sets the alpha level for\n'                  #
+                         'statsmodels.stats.multitest.multipletests (default\n' #
+                         'is 0.05)')                                            #
+parser.add_argument('-itter',                                                   #
+                    '--number_of_p_val_itterations',                            #
+                    action='store',                                             #
+                    type=int,                                                   #
+                    help='This is the number of iterations used to generate\n'  #
+                         'the background distribution. It is set to 100 so\n'   #
+                         'the code can run on most computers, but I recommend\n'#
+                         'at least 100,000 for real analysis.')                 #
+parser.add_argument('-itter_print',                                             #
+                    '--itteration_print',                                       #
+                    action='store',                                             #
+                    type=int,                                                   #
+                    help='How many iterations do you want to run per thread.\n' #
+                         'With my intel 5820k 12 core 100 was about the right\n'#
+                         'number for about 4 to 6 min of processing time\n'     #
+                         '(default is 10) .')                                   #
+parser.add_argument('-thread_mult',                                             #
+                    '--Thread_multiplyer',                                      #
+                    action='store',                                             #
+                    type=float,                                                 #
+                    help='how many simulations jobs do you want to run based\n' #
+                         'on the number of threads your computer has. Default\n'#
+                         'is 1 meaning it will use all of your threads.')       #
+parser.add_argument('-thread_offset',                                           #
+                    '--Thread_offset',                                          #
+                    action='store',                                             #
+                    type=int,                                                   #
+                    help='how many extra jobs do you want to run above the\n'   #
+                         'number of cores you have. This can also be negative\n'#
+                         'to allow for running of other programs while this\n'  #
+                         'is running. (default is 0)')                          #
+parser.add_argument('-thread_sleep',                                            #
+                    '--multithread_sleep_time',                                 #
+                    action='store',                                             #
+                    type=int,                                                   #
+                    help='how often do you want to poll for finished jobs or\n' #
+                         'idle workers in seconds (default is 1)')              #
+parser.add_argument('-exclude_neuron_layers',                                   #
+                    '--exclude_color_layers',                                   #
+                    nargs='+',                                                  #
+                    help='within the key file, you can use this argument to\n'  #
+                         'ignore neuron conversion sets from the key.csv file\n'#
+                         '(default is nothing)')                                #
+parser.add_argument('-include_larva_data_conditions',                           #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='When set, Python will provide a flat by_the_larva\n'  #
+                         'set of outputs collecting all larval level data in\n' #
+                         'the input file level output')                         #
+parser.add_argument('-include_larva_data_dates',                                #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='When set, Python will provide a flat by_the_larva\n'  #
+                         'set of outputs collecting all larval level data in\n' #
+                         'the date level output')                               #
+parser.add_argument('-include_by_the_larva_outputs',                            #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='When set, python will provide a by_the_larva\n'       #
+                         'outputs for the color_stat, group_color_stat, and\n'  #
+                         'color_number_stat output files')                      #
+parser.add_argument('-dont_include_pvalue_conditions',                          #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='By default, python will perform the randomization\n'  #
+                         'test to establish p-values. When this is set the\n'   #
+                         'analysis will not be performed')                      #
+parser.add_argument('-include_pvalue_dates',                                    #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='by default, python does not perform a p-value\n'      #
+                         'analysis by the dates provided in the input files.\n' #
+                         'When this is set the analysis will happen.')          #
+parser.add_argument('-include_pvalue_larva',                                    #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='by default, python does not perform a p-value\n'      #
+                         'analysis by the larva provided in the input files.\n' #
+                         ' When this is set the analysis will happen.')         #
+parser.add_argument('-include_conditions_in_flaten',                            #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='generate a set of flat files containing all larva\n'  #
+                         'level data in the input file level output')           #
+parser.add_argument('-include_date_in_flaten',                                  #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='generate a set of flat files containing all larva\n'  #
+                         'level data in the date level output')                 #
+parser.add_argument('-include_larva_in_flaten',                                 #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='generate a set of flat files containing all larva\n'  #
+                         'level data in the larva level output')                #
+parser.add_argument('-dont_include_randomized_match_data',                      #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='when set, python will not track the randomized\n'     #
+                         'match data. This will speed up the run slight')       #
+parser.add_argument('-random_only_colors',                                      #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='|\nwhen set, python will only randomize the data from'#
+                         '\nneurons that have color. This is a somewhat more\n' #
+                         'conservative analysis because color expressing\n'     #
+                         'neurons are maintained and was used in the paper\n'   #
+                         'but is turned off by default (recommended to use)')   #
+parser.add_argument('-silent_multithread_worker_search',                        #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='When set, the multithreading run will happen\n'       #
+                         'silently')                                            #
+parser.add_argument('-only_include_some_segments',                              #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='If used, this will require either an\n'               #
+                         '"Active_hemisegments.csv" file in your main\n'        #
+                         'directory or a -hemi_path to define the path for\n'   #
+                         'it. When used, it will limit the search to only\n'    #
+                         'the active hemisegments listed in the file.')         #
+args = parser.parse_args()                                                      #
+for var_name in args.__dict__.keys():                                           #
+    var_value=getattr(args,var_name)                                            #
+    if var_value != None:                                                       #
+        if "dont_include_pvalue_conditions"==var_name:                          #
+            dont_include_pvalue_conditions=True                                 #
+            include_pvalue_conditions=False                                     #
+        if "silent_multithread_worker_search"==var_name:                        #
+            silent_multithread_worker_search=True                               #
+            verbose_multithread_worker_search=False                             #
+        if "dont_include_randomized_match_data"==var_name:                      #
+            dont_include_randomized_match_data=True                             #
+            include_randomized_match_data=False                                 #
+        globals()[var_name]=var_value                                           #
+        if var_name == "only_include_some_segments":                            #
+            if (not os.path.exists(included_hemisegments_path) and              #
+                args.included_hemisegments_path == None):                       #
+                print('Plese provide a hemisegments file to define the active ' #
+                      'hemisegments')                                           #
+                sys.exit(1)                                                     #
+        if var_name == 'test_stat':                                             #
+            if var_value == 1:                                                  #
+                test_stat='number_of_matches'                                   #
+            elif var_value == 2:                                                #
+                test_stat='sort_of_probibility_of_matches'                      #
+            elif var_value == 3:                                                #
+                test_stat='sort_of_prob_of_matches_times_misses'                #
+            elif var_value == 4:                                                #
+                test_stat='percent_match'                                       #
+            else:                                                               #
+                print('I do not understand your test stat value '+test_stat+    #
+                      ' It must be a 1,2,3, or 4 only (see help for details)')  #
+                sys.exit(1)                                                     #
 #################################################################################
 #                             Defineing my objects                              #
 #################################################################################
@@ -851,12 +1073,8 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
 #################################################################################
 #                    Defineing my data collection functions                     #
 #################################################################################
-import csv, math, os                                                            #
+import csv, math                                                                #
 cwd=os.getcwd()                                                                 #
-if '\\' in cwd:                                                                 #
-    slash='\\'                                                                  #
-else:                                                                           #
-    slash='/'                                                                   #
 def load_pval_dic(path):                                                        #
     json_string=open(path).read()                                               #
     simp_dic = json.loads(json_string)                                          #
@@ -1484,18 +1702,31 @@ def simplify_dic(rand_dic,neuron_pairs_name_dic,neuron_layer,itters):           
 #                      import brainbow data into objects                        #
 #################################################################################
 if __name__ == "__main__":                                                      #
-    included_segment_sets_pre=the_opener(included_hemisegments_path)            #
-    included_segment_sets=[]                                                    #
-    for row in included_segment_sets_pre:                                       #
-        next_line=[]                                                            #
-        for col in row:                                                         #
-            if col != '':                                                       #
-                next_line.append(col)                                           #
-        included_segment_sets.append(next_line)                                 #
-    for included_segments in included_segment_sets:                             #
-        mkdir('.'+slash+'Input')                                                #
-        mkdir('.'+slash+'Output '+','.join(included_segments))                  #
-        input_file_path='.'+slash+'Input'+slash                                 #
+    included_segment_sets=[]                                                    # 
+    if input_dir_path [-1] != slash:                                            #
+        input_dir_path+=slash                                                   #
+    if output_dir_path[-1] != slash:                                            #
+        output_dir_path+=slash                                                  #
+    if only_include_some_segments:                                              #
+        included_segment_sets_pre=the_opener(included_hemisegments_path)        #
+        for row in included_segment_sets_pre:                                   #
+            next_line=[]                                                        #
+            for col in row:                                                     #
+                if col != '':                                                   #
+                    next_line.append(col)                                       #
+            included_segment_sets.append(next_line)                             #
+    if included_segment_sets == []:                                             #
+        included_segment_sets =[['']]                                           #
+    for included_segments_pre in included_segment_sets:                         #
+        mkdir(input_dir_path)                                                   #
+        if only_include_some_segments:                                          #
+            working_output_dir_path=(output_dir_path+                           #
+                                    'Output '+                                  #
+                                    ','.join(included_segments))                #
+        else:                                                                   #
+            working_output_dir_path=output_dir_path+'Output'                    #
+        mkdir(working_output_dir_path)                                          #
+        input_file_path=input_dir_path                                          #
         list_of_input_files=os.listdir(input_file_path)                         #
         if list_of_input_files == []:                                           #
             print('Plese put your input files in the Input folder')             #
@@ -1532,8 +1763,8 @@ if __name__ == "__main__":                                                      
                         else:                                                   #
                             warnings.warn('For some reason you are trying to '  #
                                   'add the same hemisegment object twice, plese'#
-                                  ' go back and check your code larva '         #
-                                  'object, just so you know.',                  #
+                                  ' go back and check input files for blank '   #
+                                  'lines or reused larva codes.',               #
                                       SyntaxWarning)                            #
                         neuron_data=row[4:49]                                   #
                         trouble_str=', '.join(hemisegment_str.split('|||')[1:]) #
@@ -1595,7 +1826,7 @@ if __name__ == "__main__":                                                      
 #################################################################################
         flat_outputs_dic={}                                                     #
         for condition_identifier in conditions_dic:                             #
-            output_path='.'+slash+'Output '+','.join(included_segments)+slash   #
+            output_path=working_output_dir_path+slash                           #
             simple_condition_string=condition_identifier                        #
             print('Processing the '+simple_condition_string+' condition.')      #
             current_path=(output_path+                                          #
@@ -1638,12 +1869,10 @@ if __name__ == "__main__":                                                      
                                     include_larva_data=False,                   #
                                     include_pvalues=include_pvalue_larva)       #
         if len(flat_outputs_dic)!=0:                                            #
-             output_path=('.'+slash+                                            #
-                         'Output '+                                             #
-                        ','.join(included_segments)+                            #
-                        slash+                                                  #
-                        'Flat_outputs'+                                         #
-                        slash)                                                  #
+             output_path=(working_output_dir_path+                              #
+                          slash+                                                #
+                          'Flat_outputs'+                                       #
+                          slash)                                                #
              mkdir(output_path)                                                 #
              for neuron_layer_key in flat_outputs_dic:                          #
                 current_path=output_path+neuron_layer_key+slash                 #
