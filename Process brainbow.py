@@ -1,32 +1,29 @@
 #################################################################################
 #                            User editable varables                             #
 #################################################################################
-include_larva_data_conditions=True                                              #set to True for macy
-include_larva_data_dates=False                                                  #
-include_by_the_larva_outputs=True                                               #set to True for macy
-include_pvalue_conditions=True                                                  #
-include_pvalue_dates=False                                                      #
-include_pvalue_larva=False                                                      #
-include_conditions_in_flaten=False                                              #
-include_date_in_flaten=False                                                    #
-include_larva_in_flaten=False                                                   #
-include_randomized_match_data=True                                              #
-random_only_colors=True                                                         # boolian determining if only neurons with color are randomized
+include_larva_data_conditions=False                                             # Boolean allowing for a by_the_larva output collecting all larval level data in the input file level output
+include_larva_data_dates=False                                                  # Boolean allowing for a by_the_larva output collecting all larval level data in the date level output
+include_by_the_larva_outputs=False                                              # Boolean allowing for a by_the_larva outputs for the color_stat, group_color_stat, and color_number_stat output files
+include_pvalue_conditions=True                                                  # Boolean allowing for the p-value calculation at the input file level output
+include_pvalue_dates=False                                                      # Boolean allowing for the p-value calculation at the date level output (warning, computationally intensive)
+include_pvalue_larva=False                                                      # Boolean allowing for the p-value calculation at the larva level output (warning, computationally intensive)
+include_conditions_in_flaten=False                                              # Boolean allowing for the generation of a set of flat files containing all larva level data in the input file level output
+include_date_in_flaten=False                                                    # Boolean allowing for the generation of a set of flat files containing all larva level data in the date level output
+include_larva_in_flaten=False                                                   # Boolean allowing for the generation of a set of flat files containing all larva level data in the larva level output
+include_randomized_match_data=True                                              # Boolean allowing for the inclution of randomized match data in the by_the_colors.csv output. This is useful for comparing match numbers to the number of times neurons randomly matched
+random_only_colors=True                                                         # Boolean determining if only neurons with color are randomized
 test_stat='sort_of_probibility_of_matches'                                      # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_times_misses' or 'percent_match'
 Multiple_hypothesis_method='fdr_bh'                                             # This var enharits its testing methoid from statsmodels.stats.multitest.multipletests
 alpha_level=0.05                                                                # This var sets the alpha level for statsmodels.stats.multitest.multipletests
-number_of_p_val_itterations=100                                                 # 
-itteration_print=100                                                            #
-Thread_multiplyer=1                                                             #
-Thread_offset=0                                                                 #
-Triangle_table_denomanator=("Total number of times both neurons were observed "+#
-                            "and at least one had a color")                     #
-exclude_color_layers=[]                                                         #
-multithread_sleep_time=1                                                        #
-verbose_multithread_worker_search=True                                          #
-only_include_some_segments=True                                                 #
-path_of_key_file='key.csv'                                                      #
-included_hemisegments_path='Active_hemisegments.csv'                            #
+number_of_p_val_itterations=100                                                 # This is the number of itterations used to generate the background distribution. It is set to 100 so the code can run on most computers, but I reccomend at least 100,000 for real analysis. 
+itteration_print=100                                                            # How many itterations do you want to run per thread. With my i7 5820 12 core 100 was about the right number for about 4 to 6 min of processing time
+Thread_multiplyer=1                                                             # how many simultious jobs do you want to run based on the number of threads your computer has. Default is 1 meaing it will use all of your threads.
+Thread_offset=0                                                                 # how many extra jobs do you want to run above the number of cores you have. This can also be negitive to allow for running of other programs while this is running.
+multithread_sleep_time=1                                                        # how often should python check for finished jobs
+verbose_multithread_worker_search=True                                          # Should python tell you while it is searching for idle worksers
+only_include_some_segments=True                                                 # When False, this will simply perform all the hemisegment analysis
+path_of_key_file='key.csv'                                                      # Pathway of the key.csv file
+included_hemisegments_path='Active_hemisegments.csv'                            # pathway of the active_hemisegments.csv file
 #################################################################################
 #                             Defineing my objects                              #
 #################################################################################
@@ -229,10 +226,10 @@ class basefunctions:                                                            
                 'and at least one had a color',                                 #
                 'Total number of times both neurons had color',                 #
                 'Total number of times both neurons had the same color '+       #
-				'(matches)',                                                    #
+		'(matches)',                                                    #
                 'Total number of times both neurons were observed and at '+     #
-				'least one had a color - Total number of times both neurons '+  #
-				'had the same color (non-matches)',                             #
+		'least one had a color - Total number of times both neurons '+  #
+		'had the same color (non-matches)',                             #
                 'Fractional match']                                             #
         if include_pvalues and neuron_layer not in exclude_color_layers:        #
             try:                                                                #
@@ -331,10 +328,10 @@ class basefunctions:                                                            
             random_total=pval_conversion_dic['totals']                          #
             random_matches=pval_conversion_dic['matches']                       #
             test_stat_val,p_val=self.get_test_stat_and_pval(neuron_1,           #
-			                                                neuron_2,           #
-															pval_conversion_dic,#
-															neurons_dic,        #
-															neuron_layer)       #
+                                                            neuron_2,           #
+                                                            pval_conversion_dic,#
+                                                            neurons_dic,        #
+                                                            neuron_layer)       #
             next_line+=[test_stat_val]                                          #
             next_line+=[p_val]                                                  #
             if include_randomized_match_data:                                   #
@@ -364,10 +361,10 @@ class basefunctions:                                                            
             output_list.append(larva_info+output_data)                          #
         return output_list                                                      #
     def get_test_stat_and_pval(self,                                            #
-	                           neuron_1,                                        #
-							   neuron_2,                                        #
-							   pval_conversion_dic,                             #
-							   neurons_dic,neuron_layer):                       #
+                               neuron_1,                                        #
+                               neuron_2,                                        #
+                               pval_conversion_dic,                             #
+                               neurons_dic,neuron_layer):                       #
         neuron_1_ID=neuron_1.identifier                                         #
         neuron_2_ID=neuron_2.identifier                                         #
         try:                                                                    #
@@ -387,9 +384,9 @@ class basefunctions:                                                            
                                    color_match_prob_dic)                        #
         else:                                                                   #
             test_stat_value=get_test_stat(input_table,                          #
-			                              coords_1,                             #
-										  coords_2,                             #
-										  color_match_prob_dic)                 #
+                                          coords_1,                             #
+                                          coords_2,                             #
+                                          color_match_prob_dic)                 #
         if test_stat_value in pval_conversion_dic:                              #
             proc_test_stat_val=test_stat_value                                  #
         else:                                                                   #
@@ -404,7 +401,7 @@ class basefunctions:                                                            
                     if (test_stat_value > keys[key_id] and                      #
                             test_stat_value < keys[key_id+1]):                  #
                             if (test_stat=='number_of_matches' or               #
-							    test_stat=='percent_match'):                    #
+                                test_stat=='percent_match'):                    #
                                 proc_test_stat_val=keys[key_id]                 #
                             elif (test_stat=='sort_of_probibility_of_matches' or#
                              test_stat=='sort_of_prob_of_matches_times_misses'):#
@@ -462,16 +459,16 @@ class basefunctions:                                                            
                 return simp_dic                                                 #
         if not number_of_p_val_itterations % itteration_print == 0:             #
             print('your number of itterations is not divisable by your print '+ #
-			      'itterations. Fix this')                                      #
+                  'itterations. Fix this')                                      #
         assert number_of_p_val_itterations % itteration_print == 0              #
         number_of_jobs=int(number_of_p_val_itterations/itteration_print)        #
         final_dic=make_test_stat_dic_multithreaded(self,                        #
-		                                           itteration_print,            #
-												   neuron_layer,                #
-												   neurons_dic,                 #
-												   neuron_pairs_name_dic,       #
-												   number_of_jobs,              #
-												   pval_dic_path)               #
+                                                   itteration_print,            #
+                                                   neuron_layer,                #
+                                                   neurons_dic,                 #
+                                                   neuron_pairs_name_dic,       #
+                                                   number_of_jobs,              #
+                                                   pval_dic_path)               #
         json_text_dic=json.dumps(final_dic)                                     #
         open(output_pval_path,'w').write(json_text_dic)                         #
         return final_dic                                                        #
@@ -675,9 +672,9 @@ def randomize_objects_in_table(input_table):                                    
                     ordered_input_list.append(col)                              #
             else:                                                               #
                 ordered_input_list.append(col)                                  #
-	shuffle(ordered_input_list)                                                 #
-	output_table=[]                                                             #
-	itter=0                                                                     #
+    shuffle(ordered_input_list)                                                 #
+    output_table=[]                                                             #
+    itter=0                                                                     #
     for row in input_table:                                                     #
         next_line=[]                                                            #
         for col in row:                                                         #
@@ -727,7 +724,7 @@ def not_matching_colors_no_rep(line,coords_1,coords_2):                         
             if line[coord] != '00000':                                          #
                 sublist_2.append(line[coord])                                   #
     if ((sublist_1 != [] or sublist_2 != []) and                                #
-	    (sublist_1_pos and sublist_2_pos)):                                     #
+        (sublist_1_pos and sublist_2_pos)):                                     #
         return 1                                                                #
     else:                                                                       #
         return 0                                                                #
@@ -772,7 +769,7 @@ def matching_colors_prob_rep(line,coords,color_match_prob_dic):                 
         if line[coord]!= '' and line[coord] != '00000':                         #
             sublist.append(line[coord])                                         #
     matches=[item for item,                                                     #
-	         count in collections.Counter(sublist).items() if count > 1]        #
+             count in collections.Counter(sublist).items() if count > 1]        #
     if len(matches)==0:                                                         #
         return 1                                                                #
     else:                                                                       #
@@ -792,12 +789,12 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                 matches+=matching_colors_rep(row,coords_1)                      #
                 if include_randomized_match_data:                               #
                     both_neurons_observed_one_with_color+=(                     #
-					                      not_matching_colors_rep(row,coords_1))#
+                                          not_matching_colors_rep(row,coords_1))#
             else:                                                               #
                 matches+=matching_colors_no_rep(row,coords_1,coords_2)          #
                 if include_randomized_match_data:                               #
                     both_neurons_observed_one_with_color+=(                     #
-					          not_matching_colors_no_rep(row,coords_1,coords_2))#
+                              not_matching_colors_no_rep(row,coords_1,coords_2))#
         test_stat_value = matches                                               #
     elif test_stat == 'percent_match':                                          #
         test_stat_value='N/A'                                                   #
@@ -807,43 +804,43 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
             if same_neuron:                                                     #
                 matches+=matching_colors_rep(row,coords_1)                      #
                 both_neurons_observed_one_with_color+=(                         #
-				                          not_matching_colors_rep(row,coords_1))#
+                                          not_matching_colors_rep(row,coords_1))#
             else:                                                               #
                 matches+=matching_colors_no_rep(row,coords_1,coords_2)          #
                 both_neurons_observed_one_with_color+=(                         #
-				              not_matching_colors_no_rep(row,coords_1,coords_2))#
+                              not_matching_colors_no_rep(row,coords_1,coords_2))#
         if float(both_neurons_observed_one_with_color) != float(0):             #
             test_stat_value=str(float(matches)/                                 #
                               float(both_neurons_observed_one_with_color))      #
         else:                                                                   #
             test_stat_value='N/A'                                               #
     elif test_stat == ('sort_of_probibility_of_matches' or                      #
-	                   'sort_of_prob_of_matches_times_misses'):                 #
+                       'sort_of_prob_of_matches_times_misses'):                 #
         prob=1                                                                  #
         mult=1                                                                  #
         for row in input_table:                                                 #
             if same_neuron:                                                     #
                 prob=prob*matching_colors_prob_rep(row,coords_1,                #
-				                                   color_match_prob_dic)        #
+                                                   color_match_prob_dic)        #
                 if test_stat == 'sort_of_prob_of_matches_times_misses':         #
                     mult+=(not_matching_colors_rep(row,coords_1)-               #
-					       matching_colors_rep(row,coords_1))                   #
+                           matching_colors_rep(row,coords_1))                   #
                 if include_randomized_match_data:                               #
                     matches+=matching_colors_rep(row,coords_1)                  #
                     both_neurons_observed_one_with_color+=(                     #
-					                      not_matching_colors_rep(row,coords_1))#
+                                          not_matching_colors_rep(row,coords_1))#
             else:                                                               #
                 prob=prob*matching_colors_prob_no_rep(row,                      #
-				                                      coords_1,                 #
-													  coords_2,                 #
-													  color_match_prob_dic)     #
+                                                      coords_1,                 #
+                                                      coords_2,                 #
+                                                      color_match_prob_dic)     #
                 if test_stat == 'sort_of_prob_of_matches_times_misses':         #
                     mult+=(not_matching_colors_no_rep(row,coords_1,coords_2)-   #
-					       matching_colors_no_rep(row,coords_1,coords_2))       #
+                           matching_colors_no_rep(row,coords_1,coords_2))       #
                 if include_randomized_match_data:                               #
                     matches+=matching_colors_no_rep(row,coords_1,coords_2)      #
                     both_neurons_observed_one_with_color+=(                     #
-					          not_matching_colors_no_rep(row,coords_1,coords_2))#
+                              not_matching_colors_no_rep(row,coords_1,coords_2))#
         assert mult > 0                                                         #
         test_stat_value=prob*mult                                               #
     if include_randomized_match_data:                                           #
@@ -869,20 +866,20 @@ def load_pval_dic(path):                                                        
             pval_dic[str(key)]={}                                               #
             for data_key in simp_dic[key]:                                      #
                 if (str(data_key) == 'max_value' or                             #
-				    str(data_key) == 'min_value' or                             #
-					str(data_key) == 'totals' or                                #
-					str(data_key) == 'matches'):                                #
+                    str(data_key) == 'min_value' or                             #
+                    str(data_key) == 'totals' or                                #
+                    str(data_key) == 'matches'):                                #
                     pval_dic[str(key)][str(data_key)]=simp_dic[key][data_key]   #
                     if str(data_key) == 'totals' or str(data_key) == 'matches': #
                         pval_dic[str(key)][str(data_key)]=(                     #
-						                           int(simp_dic[key][data_key]))#
+                                                   int(simp_dic[key][data_key]))#
                 else:                                                           #
                     if data_key == 'N/A':                                       #
                         pval_dic[str(key)][str(data_key)]=(                     #
-						                                simp_dic[key][data_key])#
+                                                        simp_dic[key][data_key])#
                     else:                                                       #
                         pval_dic[str(key)][float(data_key)]=(                   #
-						                                simp_dic[key][data_key])#
+                                                        simp_dic[key][data_key])#
     return pval_dic                                                             #
 def find_col_ID(table,search_header):                                           #
     header=table[0]                                                             #
@@ -945,11 +942,14 @@ def mkdir(directory):                                                           
 #################################################################################
 #                    generating p-value dictionaries functions                  #
 #################################################################################
+Triangle_table_denomanator=("Total number of times both neurons were observed "+#
+                            "and at least one had a color")                     #
 def make_test_stat_dic(data_obj,                                                #
                        number_of_p_val_itterations,                             #
-					   neuron_layer, neurons_dic,                               #
-					   neuron_pairs_name_dic,                                   #
-					   return_dic):                                             #
+                       neuron_layer,                                            #
+                       neurons_dic,                                             #
+                       neuron_pairs_name_dic,                                   #
+                       return_dic):                                             #
     color_match_prob_dic=data_obj.color_match_prob_dic                          #
     for itter in range(0,number_of_p_val_itterations):                          #
         working_data=data_obj.make_random_table()                               #
@@ -960,20 +960,20 @@ def make_test_stat_dic(data_obj,                                                
             coords_2=neurons_dic[neuron_layer][neuron_2].col_IDs                #
             if include_randomized_match_data:                                   #
                 test_stat,totals,matches=get_test_stat(working_data,            #
-				                                       coords_1,                #
-													   coords_2,                #
-													   color_match_prob_dic)    #
+                                                       coords_1,                #
+                                                       coords_2,                #
+                                                       color_match_prob_dic)    #
             else:                                                               #
                 test_stat=get_test_stat(working_data,                           #
-				                        coords_1,                               #
-										coords_2,                               #
-										color_match_prob_dic)                   #
+                                        coords_1,                               #
+                                        coords_2,                               #
+                                        color_match_prob_dic)                   #
             if neuron_set_name not in return_dic:                               #
                 return_dic[neuron_set_name]=''                                  #
             if include_randomized_match_data:                                   #
                 return_dic[neuron_set_name]+=(str(test_stat)+'|||'+             #
-				                              str(totals)+'|||'+                #
-											  str(matches)+',')                 #
+                                              str(totals)+'|||'+                #
+                                              str(matches)+',')                 #
             else:                                                               #
                 return_dic[neuron_set_name]+=str(test_stat)+','                 #
 #################################################################################
@@ -1062,15 +1062,15 @@ def make_by_the_colors_output(data_object,                                      
         for row in output_table[1:]:                                            #
             p_val_list.append(float(row[p_val_column]))                         #
         corrected_ps=multipletests(p_val_list,                                  #
-		                           alpha=alpha_level,                           #
-								   method=Multiple_hypothesis_method)[1]        #
+                                   alpha=alpha_level,                           #
+                                   method=Multiple_hypothesis_method)[1]        #
         output_table[0]=(output_table[0][0:p_val_column+1]+                     #
-		                 ['FDR']+                                               #
-						 output_table[0][p_val_column+1:])                      #
+                         ['FDR']+                                               #
+                         output_table[0][p_val_column+1:])                      #
         for row_ID in range(1,len(output_table)):                               #
             output_table[row_ID]=(output_table[row_ID][0:p_val_column+1]+       #
-			                     [corrected_ps[row_ID-1]]+                      #
-								 output_table[row_ID][p_val_column+1:])         #
+                                  [corrected_ps[row_ID-1]]+                     #
+                                  output_table[row_ID][p_val_column+1:])        #
     the_saver(path+'by_the_colors.csv',output_table)                            #
     p_val_col='N/A'                                                             #
     pair_name_col='N/A'                                                         #
@@ -1157,7 +1157,7 @@ def make_by_the_colors_output(data_object,                                      
                 if include_pvalues:                                             #
                     next_line_p.append(p_val_pair_dic[neuron_match_key])        #
                     next_line_corrected_p.append(corrected_p_val_dic[           #
-					                                          neuron_match_key])#
+                                                              neuron_match_key])#
                 next_line_both_obs.append(both_obs_pair_dic[neuron_match_key])  #
                 next_line_either_color.append(                                  #
                                               either_color_pair_dic[            #
@@ -1326,17 +1326,17 @@ def add_two_simple_dics(simp_dic_1,simp_dic_2):                                 
             return_dic[neuron_match_name]['min_value']=min(posible_values)      #
             if include_randomized_match_data:                                   #
                 return_dic[neuron_match_name]['totals']=(                       #
-				              simp_dic_1[neuron_match_name]['totals']+          #
-							  simp_dic_2[neuron_match_name]['totals'])          #
+                              simp_dic_1[neuron_match_name]['totals']+          #
+                              simp_dic_2[neuron_match_name]['totals'])          #
                 return_dic[neuron_match_name]['matches']=(                      #
-				              simp_dic_1[neuron_match_name]['matches']+         #
-							  simp_dic_2[neuron_match_name]['matches'])         #
+                              simp_dic_1[neuron_match_name]['matches']+         #
+                              simp_dic_2[neuron_match_name]['matches'])         #
     return return_dic                                                           #
 def finalize_dic(master_dic):                                                   #
     if test_stat=='number_of_matches' or test_stat=='percent_match':            #
         big_or_small_vals_are_good='big'                                        #
     elif (test_stat=='sort_of_probibility_of_matches' or                        #
-	      test_stat=='sort_of_prob_of_matches_times_misses'):                   #
+          test_stat=='sort_of_prob_of_matches_times_misses'):                   #
         big_or_small_vals_are_good='small'                                      #
     else:                                                                       #
         print('I do not understand your test stat '+test_stat)                  #
@@ -1366,7 +1366,7 @@ def finalize_dic(master_dic):                                                   
                 if value != 'max_value' and value != 'min_value':               #
                     running_total+=master_dic[key][value]                       #
                     final_dic[key][value]=(float(running_total)/                #
-					                       float(itterations))                  #
+                                           float(itterations))                  #
             assert running_total == itterations                                 #
             if include_randomized_match_data:                                   #
                 final_dic[key]['totals']=master_dic[key]['totals']              #
@@ -1374,10 +1374,10 @@ def finalize_dic(master_dic):                                                   
     return final_dic                                                            #
 def make_test_stat_dic_multithreaded(data_obj,                                  #
                                      itteration_print,                          #
-									 neuron_layer,                              #
-									 neurons_dic,                               #
-									 neuron_pairs_name_dic,number_of_jobs_pre,  #
-									 pval_dic_path):                            #
+                                     neuron_layer,                              #
+                                     neurons_dic,                               #
+                                     neuron_pairs_name_dic,number_of_jobs_pre,  #
+                                     pval_dic_path):                            #
     master_dic={}                                                               #
     jobs_dic={}                                                                 #
     return_data_dic={}                                                          #
@@ -1400,16 +1400,16 @@ def make_test_stat_dic_multithreaded(data_obj,                                  
         for worker_name in worker_dic:                                          #
             start_a_job_with_this_worker=False                                  #
             if (worker_dic[worker_name] == '' and                               #
-			    queued_job_ID != number_of_jobs):                               #
+                queued_job_ID != number_of_jobs):                               #
                 start_a_job_with_this_worker=True                               #
             elif (worker_dic[worker_name] != '' and                             #
-			      not worker_dic[worker_name].is_alive()):                      #
+                  not worker_dic[worker_name].is_alive()):                      #
                 if not finished_workers_dic[worker_name][0]:                    #
                     return_dic_multi = dict(return_data_dic[worker_name])       #
                     simp_dic_multi=simplify_dic(return_dic_multi,               #
-					                            neuron_pairs_name_dic,          #
-												neuron_layer,                   #
-												itteration_print)               #
+                                                neuron_pairs_name_dic,          #
+                                                neuron_layer,                   #
+                                                itteration_print)               #
                     master_dic=add_two_simple_dics(master_dic,simp_dic_multi)   #
                     json_text_dic=json.dumps(master_dic)                        #
                     open(temp_output_path,'w').write(json_text_dic)             #
@@ -1417,8 +1417,8 @@ def make_test_stat_dic_multithreaded(data_obj,                                  
                     finished_job_ID=finished_workers_dic[worker_name][1]        #
                     jobs_dic[finished_job_ID]='Done'                            #
                     print('\t\tFinished '+str((finished_job_ID+1+               #
-					                           jobs_done_sucessfully_before)*   #
-											   itteration_print)+' iterations.')#
+                                               jobs_done_sucessfully_before)*   #
+                                               itteration_print)+' iterations.')#
                 if not jobs_done(jobs_dic) and queued_job_ID != number_of_jobs: #
                     start_a_job_with_this_worker=True                           #
             if start_a_job_with_this_worker:                                    #
@@ -1426,21 +1426,21 @@ def make_test_stat_dic_multithreaded(data_obj,                                  
                 return_data_dic[worker_name] = manager.dict()                   #
                 return_dic_multi = return_data_dic[worker_name]                 #
                 command_tup=(data_obj,                                          #
-				             itteration_print,                                  #
-							 neuron_layer,                                      #
-							 neurons_dic,                                       #
-							 neuron_pairs_name_dic,                             #
-							 return_dic_multi)                                  #
+                             itteration_print,                                  #
+                             neuron_layer,                                      #
+                             neurons_dic,                                       #
+                             neuron_pairs_name_dic,                             #
+                             return_dic_multi)                                  #
                 worker_dic[worker_name]=multiprocessing.Process(                #
-				                                      target=make_test_stat_dic,#
-													  args=command_tup)         #
+                                                      target=make_test_stat_dic,#
+                                                      args=command_tup)         #
                 worker_dic[worker_name].start()                                 #
                 finished_workers_dic[worker_name][0]=False                      #
                 finished_workers_dic[worker_name][1]=queued_job_ID              #
                 jobs_dic[queued_job_ID]='Started'                               #
                 print('\t\tStarted '+str((queued_job_ID+1+                      #
-				                          jobs_done_sucessfully_before)*        #
-										  itteration_print)+' iterations.')     #
+                                          jobs_done_sucessfully_before)*        #
+                                          itteration_print)+' iterations.')     #
                 queued_job_ID+=1                                                #
                 started_a_job=True                                              #
         if not started_a_job:                                                   #
