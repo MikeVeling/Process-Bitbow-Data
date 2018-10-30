@@ -142,7 +142,8 @@ parser.add_argument('-include_larva_data_conditions',                           
                     const=True,                                                 #
                     help='When set, Python will provide a flat by_the_larva\n'  #
                          'set of outputs collecting all larval level data in\n' #
-                         'the input file level output')                         #
+                         'the input file level output. This does not work if\n' #
+                         '-include_by_the_larva_outputs is not also set'        #
 parser.add_argument('-include_larva_data_dates',                                #
                     action='store_const',                                       #
                     const=True,                                                 #
