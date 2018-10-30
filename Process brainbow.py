@@ -226,10 +226,10 @@ class basefunctions:                                                            
                 'and at least one had a color',                                 #
                 'Total number of times both neurons had color',                 #
                 'Total number of times both neurons had the same color '+       #
-		'(matches)',                                                    #
+                '(matches)',                                                    #
                 'Total number of times both neurons were observed and at '+     #
-		'least one had a color - Total number of times both neurons '+  #
-		'had the same color (non-matches)',                             #
+                'least one had a color - Total number of times both neurons '+  #
+                'had the same color (non-matches)',                             #
                 'Fractional match']                                             #
         if include_pvalues and neuron_layer not in exclude_color_layers:        #
             try:                                                                #
