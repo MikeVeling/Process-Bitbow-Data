@@ -24,6 +24,7 @@ verbose_multithread_worker_search=True                                          
 only_include_some_segments=True                                                 # When False, this will simply perform all the hemisegment analysis
 path_of_key_file='key.csv'                                                      # Pathway of the key.csv file
 included_hemisegments_path='Active_hemisegments.csv'                            # pathway of the active_hemisegments.csv file
+exclude_color_layers=['Red','Yellow','Blue','Green','Purple']                   # These are neuron grouping layers that should not be used in the analysis. This allows you to keep a complex key file but maintain a simple analysis
 #################################################################################
 #                             Defineing my objects                              #
 #################################################################################
