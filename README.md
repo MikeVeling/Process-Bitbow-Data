@@ -46,9 +46,7 @@ python Process_brainbow.py
 There are also many varables that can be tweeked to process the data your way. Many of these varables are quite spicific and technical so do not hesitate to contact [me](mailto:mike.veling@gmail.com) about them.
 
 ```
-python Process_brainbow.py -h
-
-usage: Process brainbow.py [-h] [-i INPUT_DIR_PATH] [-o OUTPUT_DIR_PATH]
+usage: Process_brainbow.py [-h] [-i INPUT_DIR_PATH] [-o OUTPUT_DIR_PATH]
                            [-k PATH_OF_KEY_FILE]
                            [-hemi_path INCLUDED_HEMISEGMENTS_PATH]
                            [-ts TEST_STAT] [-mh MULTIPLE_HYPOTHESIS_METHOD]
@@ -96,8 +94,9 @@ optional arguments:
 
                                 1:number_of_matches
                                 2:sort_of_probibility_of_matches
-                                3:sort_of_prob_of_matches_times_misses
+                                3:sort_of_prob_of_matches_normalized
                                 4:percent_match
+                                5:(n+k/n)*sum(probs)
                         |
   -mh MULTIPLE_HYPOTHESIS_METHOD, --Multiple_hypothesis_method MULTIPLE_HYPOTHESIS_METHOD
                         This var inherits its testing method from
@@ -136,7 +135,8 @@ optional arguments:
   -include_larva_data_conditions
                         When set, Python will provide a flat by_the_larva
                         set of outputs collecting all larval level data in
-                        the input file level output
+                        the input file level output. This does not work if
+                        -include_by_the_larva_outputs is not also set
   -include_larva_data_dates
                         When set, Python will provide a flat by_the_larva
                         set of outputs collecting all larval level data in
