@@ -73,9 +73,9 @@ parser.add_argument('-ts',                                                      
                     '--test_stat',                                              #
                     action='store',                                             #
                     type=int,                                                   #
-                    help='What test stat do you want to use(default is 2\n'     #
-                         '"sort_of_probibility_of_matches" that was used in\n'  #
-                         'the paper)?\n\n'+                                     #
+                    help='What test stat do you want to use(default is 3\n'     #
+                         '"sort_of_prob_of_matches_normalized" that \n'         #
+                         'was used in the paper)?\n\n'+                         #
                     '\t1:number_of_matches\n'+                                  #
                     '\t2:sort_of_probibility_of_matches\n'+                     #
                     '\t3:sort_of_prob_of_matches_normalized\n'+                 #
