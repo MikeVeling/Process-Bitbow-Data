@@ -21,7 +21,7 @@ include_date_in_flaten=False                                                    
 include_larva_in_flaten=False                                                   # Boolean allowing for the generation of a set of flat files containing all larva level data in the larva level output
 include_randomized_match_data=True                                              # Boolean allowing for the inclusion of randomized match data in the by_the_colors.csv output. This is useful for comparing match numbers to the number of times neurons randomly matched
 random_only_colors=False                                                        # Boolean determining if only neurons with color are randomized
-test_stat='sort_of_probibility_of_matches'                                      # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_times_misses' or 'percent_match'
+test_stat='sort_of_prob_of_matches_normalized'                                  # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_normalized' or 'percent_match'
 Multiple_hypothesis_method='fdr_bh'                                             # This var inherits its testing method from statsmodels.stats.multitest.multipletests
 alpha_level=0.05                                                                # This var sets the alpha level for statsmodels.stats.multitest.multipletests
 number_of_p_val_itterations=100                                                 # This is the number of iterations used to generate the background distribution. It is set to 100 so the code can run on most computers, but I recommend at least 100,000 for real analysis. 
@@ -78,8 +78,9 @@ parser.add_argument('-ts',                                                      
                          'the paper)?\n\n'+                                     #
                     '\t1:number_of_matches\n'+                                  #
                     '\t2:sort_of_probibility_of_matches\n'+                     #
-                    '\t3:sort_of_prob_of_matches_times_misses\n'+               #
-                    '\t4:percent_match\n|')                                     #
+                    '\t3:sort_of_prob_of_matches_normalized\n'+                 #
+                    '\t4:percent_match\n'                                       #
+                    '\t5:(n+k/n)*sum(probs)\n|')                                #
 parser.add_argument('-mh',                                                      #
                     '--Multiple_hypothesis_method',                             #
                     action='store',                                             #
@@ -143,7 +144,7 @@ parser.add_argument('-include_larva_data_conditions',                           
                     help='When set, Python will provide a flat by_the_larva\n'  #
                          'set of outputs collecting all larval level data in\n' #
                          'the input file level output. This does not work if\n' #
-                         '-include_by_the_larva_outputs is not also set'        #
+                         '-include_by_the_larva_outputs is not also set')       #
 parser.add_argument('-include_larva_data_dates',                                #
                     action='store_const',                                       #
                     const=True,                                                 #
@@ -241,9 +242,11 @@ for var_name in args.__dict__.keys():                                           
             elif var_value == 2:                                                #
                 test_stat='sort_of_probibility_of_matches'                      #
             elif var_value == 3:                                                #
-                test_stat='sort_of_prob_of_matches_times_misses'                #
+                test_stat='sort_of_prob_of_matches_normalized'                  #
             elif var_value == 4:                                                #
                 test_stat='percent_match'                                       #
+            elif var_value == 5:                                                #
+                test_stat='(n+k/n)*sum(probs)'                                  #
             else:                                                               #
                 print('I do not understand your test stat value '+test_stat+    #
                       ' It must be a 1,2,3, or 4 only (see help for details)')  #
@@ -628,7 +631,8 @@ class basefunctions:                                                            
                                 test_stat=='percent_match'):                    #
                                 proc_test_stat_val=keys[key_id]                 #
                             elif (test_stat=='sort_of_probibility_of_matches' or#
-                             test_stat=='sort_of_prob_of_matches_times_misses'):#
+                            test_stat=='sort_of_prob_of_matches_normalized' or  #
+                            test_stat=='(n+k/n)*sum(probs)'):                   #
                                 proc_test_stat_val=keys[key_id+1]               #
             if proc_test_stat_val == 'something_random':                        #
                 print(test_stat_value)                                          #
@@ -932,7 +936,7 @@ def matching_colors_no_rep(line,coords_1,coords_2):                             
         return 0                                                                #
     else:                                                                       #
         return 1                                                                #
-def not_matching_colors_no_rep(line,coords_1,coords_2):                         #
+def not_matching_or_matching_colors_no_rep(line,coords_1,coords_2):             #
     sublist_1=[]                                                                #
     sublist_2=[]                                                                #
     sublist_1_pos=False                                                         #
@@ -975,7 +979,7 @@ def matching_colors_rep(line,coords):                                           
         return 1                                                                #
     else:                                                                       #
         return 0                                                                #
-def not_matching_colors_rep(line,coords):                                       #
+def not_matching_or_matching_colors_rep(line,coords):                           #
     sublist=[]                                                                  #
     sublist_with_blanks=[]                                                      #
     for coord in coords:                                                        #
@@ -1003,7 +1007,8 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
         same_neuron = True                                                      #
     else:                                                                       #
         same_neuron = False                                                     #
-    if include_randomized_match_data:                                           #
+    if (include_randomized_match_data or                                        #
+        test_stat=='(n+k/n)*sum(probs)'):                                       #
         matches=0                                                               #
         both_neurons_observed_one_with_color=0                                  #
     if test_stat == 'number_of_matches':                                        #
@@ -1013,12 +1018,12 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                 matches+=matching_colors_rep(row,coords_1)                      #
                 if include_randomized_match_data:                               #
                     both_neurons_observed_one_with_color+=(                     #
-                                          not_matching_colors_rep(row,coords_1))#
+                              not_matching_or_matching_colors_rep(row,coords_1))#
             else:                                                               #
                 matches+=matching_colors_no_rep(row,coords_1,coords_2)          #
                 if include_randomized_match_data:                               #
                     both_neurons_observed_one_with_color+=(                     #
-                              not_matching_colors_no_rep(row,coords_1,coords_2))#
+                  not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
         test_stat_value = matches                                               #
     elif test_stat == 'percent_match':                                          #
         test_stat_value='N/A'                                                   #
@@ -1028,45 +1033,62 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
             if same_neuron:                                                     #
                 matches+=matching_colors_rep(row,coords_1)                      #
                 both_neurons_observed_one_with_color+=(                         #
-                                          not_matching_colors_rep(row,coords_1))#
+                              not_matching_or_matching_colors_rep(row,coords_1))#
             else:                                                               #
                 matches+=matching_colors_no_rep(row,coords_1,coords_2)          #
                 both_neurons_observed_one_with_color+=(                         #
-                              not_matching_colors_no_rep(row,coords_1,coords_2))#
+                  not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
         if float(both_neurons_observed_one_with_color) != float(0):             #
             test_stat_value=str(float(matches)/                                 #
                               float(both_neurons_observed_one_with_color))      #
         else:                                                                   #
             test_stat_value='N/A'                                               #
-    elif test_stat == ('sort_of_probibility_of_matches' or                      #
-                       'sort_of_prob_of_matches_times_misses'):                 #
+    elif (test_stat == 'sort_of_probibility_of_matches' or                      #
+           test_stat == 'sort_of_prob_of_matches_normalized' or                 #
+           test_stat == '(n+k/n)*sum(probs)'):                                  #
         prob=1                                                                  #
-        mult=1                                                                  #
+        k=0                                                                     #
+        sum_val=0                                                               #
         for row in input_table:                                                 #
+            prob_temp=1                                                         #
             if same_neuron:                                                     #
-                prob=prob*matching_colors_prob_rep(row,coords_1,                #
+                prob_temp=matching_colors_prob_rep(row,coords_1,                #
                                                    color_match_prob_dic)        #
-                if test_stat == 'sort_of_prob_of_matches_times_misses':         #
-                    mult+=(not_matching_colors_rep(row,coords_1)-               #
+                if test_stat == 'sort_of_prob_of_matches_normalized':           #
+                    k+=(not_matching_or_matching_colors_rep(row,coords_1)-      #
                            matching_colors_rep(row,coords_1))                   #
-                if include_randomized_match_data:                               #
+                if (include_randomized_match_data or                            #
+                    test_stat=='(n+k/n)*sum(probs)'):                           #
                     matches+=matching_colors_rep(row,coords_1)                  #
                     both_neurons_observed_one_with_color+=(                     #
-                                          not_matching_colors_rep(row,coords_1))#
+                              not_matching_or_matching_colors_rep(row,coords_1))#
             else:                                                               #
-                prob=prob*matching_colors_prob_no_rep(row,                      #
+                prob_temp=matching_colors_prob_no_rep(row,                      #
                                                       coords_1,                 #
                                                       coords_2,                 #
                                                       color_match_prob_dic)     #
-                if test_stat == 'sort_of_prob_of_matches_times_misses':         #
-                    mult+=(not_matching_colors_no_rep(row,coords_1,coords_2)-   #
+                if test_stat == 'sort_of_prob_of_matches_normalized':           #
+                    k+=(                                                        # 
+                 not_matching_or_matching_colors_no_rep(row,coords_1,coords_2)- #
                            matching_colors_no_rep(row,coords_1,coords_2))       #
-                if include_randomized_match_data:                               #
+                if (include_randomized_match_data or                            #
+                    test_stat=='(n+k/n)*sum(probs)'):                           #
                     matches+=matching_colors_no_rep(row,coords_1,coords_2)      #
                     both_neurons_observed_one_with_color+=(                     #
-                              not_matching_colors_no_rep(row,coords_1,coords_2))#
-        assert mult > 0                                                         #
-        test_stat_value=prob*mult                                               #
+                  not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
+            if prob_temp != 1:                                                  #
+                prob=prob*prob_temp                                             # The prob_temp value is already squared
+                sum_val+=prob_temp                                              #
+        if test_stat == '(n+k/n)*sum(probs)':                                   #
+            if matches != 0:                                                    #
+                test_stat_value=((matches+k)/(matches)*sum_val)                 #
+            else:                                                               #
+                test_stat_value=5                                               # This is just an arbrtrary large value so that when no matches are observed the scoring system will ignore the discovery
+        else:                                                                   #
+            if k != 0:                                                          #
+                test_stat_value=prob**(float(1)/float(k))                       #
+            else:                                                               #
+                test_stat_value=prob                                            # This is a special case smoothing factor. If there are no mismatches, simply pretend there was 1 so you can continue to process the data. Functionally this means the first mismatch for a neuron pair is free (does not affect its score)
     if include_randomized_match_data:                                           #
         return test_stat_value, both_neurons_observed_one_with_color, matches   #
     else:                                                                       #
@@ -1556,7 +1578,8 @@ def finalize_dic(master_dic):                                                   
     if test_stat=='number_of_matches' or test_stat=='percent_match':            #
         big_or_small_vals_are_good='big'                                        #
     elif (test_stat=='sort_of_probibility_of_matches' or                        #
-          test_stat=='sort_of_prob_of_matches_times_misses'):                   #
+          test_stat=='sort_of_prob_of_matches_normalized' or                    #
+          test_stat=='(n+k/n)*sum(probs)'):                                     #
         big_or_small_vals_are_good='small'                                      #
     else:                                                                       #
         print('I do not understand your test stat '+test_stat)                  #
