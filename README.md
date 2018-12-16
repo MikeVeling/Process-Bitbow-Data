@@ -46,6 +46,8 @@ python Process_brainbow.py
 There are also many varables that can be tweeked to process the data your way. Many of these varables are quite spicific and technical so do not hesitate to contact [me](mailto:mike.veling@gmail.com) about them.
 
 ```
+Process_brainbow.py -h
+
 usage: Process_brainbow.py [-h] [-i INPUT_DIR_PATH] [-o OUTPUT_DIR_PATH]
                            [-k PATH_OF_KEY_FILE]
                            [-hemi_path INCLUDED_HEMISEGMENTS_PATH]
@@ -88,9 +90,9 @@ optional arguments:
                         Note this is required if the
                         -only_include_some_segments is used
   -ts TEST_STAT, --test_stat TEST_STAT
-                        What test stat do you want to use(default is 2
-                        "sort_of_probibility_of_matches" that was used in
-                        the paper)?
+                        What test stat do you want to use(default is 3
+                        "sort_of_prob_of_matches_normalized" that
+                        was used in the paper)?
 
                                 1:number_of_matches
                                 2:sort_of_probibility_of_matches
