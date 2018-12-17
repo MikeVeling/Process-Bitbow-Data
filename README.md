@@ -288,6 +288,10 @@ all_data
 
 <b>[set of colors]</b>: Beyond the last column there is a set of color codes. These codes correspond to the colors in the analysis and the values of the cells indicates how many times this particular neuron pair had a match in that particular color.
 
+### "Flatten" Folders and files description
+You will see folders and files with a "Flattened" prefix. These files and folders are the same as their normal counterparts just with the raw larva data combined together into a single file. This makes processing the files easier as you do not need to manually check data from each larva.
+
+
 ## Concluding remarks
 
 As these analyses are somewhat complex, I expect there may be some confusion about all the inputs and outputs. As such, I would be happy to work with you to make it understandable and or help you tailor the code to your needs. Feel free to contact [me](mailto:mike.veling@gmail.com) if you would like my help.
