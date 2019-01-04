@@ -21,7 +21,7 @@ include_date_in_flaten=False                                                    
 include_larva_in_flaten=False                                                   # Boolean allowing for the generation of a set of flat files containing all larva level data in the larva level output
 include_randomized_match_data=True                                              # Boolean allowing for the inclusion of randomized match data in the by_the_colors.csv output. This is useful for comparing match numbers to the number of times neurons randomly matched
 random_only_colors=False                                                        # Boolean determining if only neurons with color are randomized
-test_stat='sort_of_prob_of_matches_normalized'                                  # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_normalized' or 'percent_match'
+test_stat='sort_of_prob_of_matches_normalized'                                  # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_normalized' or 'percent_match' or 'kappa'
 Multiple_hypothesis_method='fdr_bh'                                             # This var inherits its testing method from statsmodels.stats.multitest.multipletests
 alpha_level=0.05                                                                # This var sets the alpha level for statsmodels.stats.multitest.multipletests
 number_of_p_val_itterations=100                                                 # This is the number of iterations used to generate the background distribution. It is set to 100 so the code can run on most computers, but I recommend at least 100,000 for real analysis. 
@@ -80,7 +80,8 @@ parser.add_argument('-ts',                                                      
                     '\t2:sort_of_probibility_of_matches\n'+                     #
                     '\t3:sort_of_prob_of_matches_normalized\n'+                 #
                     '\t4:percent_match\n'                                       #
-                    '\t5:(n+k/n)*sum(probs)\n|')                                #
+                    '\t5:(n+k/n)*sum(probs)\n'                                  #
+                    '\t6:kappa\n|')                                             #
 parser.add_argument('-mh',                                                      #
                     '--Multiple_hypothesis_method',                             #
                     action='store',                                             #
@@ -247,9 +248,12 @@ for var_name in args.__dict__.keys():                                           
                 test_stat='percent_match'                                       #
             elif var_value == 5:                                                #
                 test_stat='(n+k/n)*sum(probs)'                                  #
+            elif var_value == 6:                                                #
+                test_stat='kappa'                                               #
             else:                                                               #
                 print('I do not understand your test stat value '+test_stat+    #
-                      ' It must be a 1,2,3, or 4 only (see help for details)')  #
+                      ' It must be a 1,2,3,4,5, or 6 only (see help for'+       #
+                       'details)')                                              #
                 sys.exit(1)                                                     #
 #################################################################################
 #                             Defineing my objects                              #
@@ -628,7 +632,8 @@ class basefunctions:                                                            
                     if (test_stat_value > keys[key_id] and                      #
                             test_stat_value < keys[key_id+1]):                  #
                             if (test_stat=='number_of_matches' or               #
-                                test_stat=='percent_match'):                    #
+                                test_stat=='percent_match' or                   #
+                                test_stat=='kappa'):                            #
                                 proc_test_stat_val=keys[key_id]                 #
                             elif (test_stat=='sort_of_probibility_of_matches' or#
                             test_stat=='sort_of_prob_of_matches_normalized' or  #
@@ -1007,6 +1012,10 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
         same_neuron = True                                                      #
     else:                                                                       #
         same_neuron = False                                                     #
+    if test_stat=='kappa':                                                      #
+        Pe=float(0)                                                             #
+        for color_key in color_match_prob_dic:                                  #
+            Pe+=float(color_match_prob_dic[color_key])                          #
     if (include_randomized_match_data or                                        #
         test_stat=='(n+k/n)*sum(probs)'):                                       #
         matches=0                                                               #
@@ -1025,7 +1034,7 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                     both_neurons_observed_one_with_color+=(                     #
                   not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
         test_stat_value = matches                                               #
-    elif test_stat == 'percent_match':                                          #
+    elif test_stat == 'percent_match' or test_stat=='kappa':                    #
         test_stat_value='N/A'                                                   #
         matches=0                                                               #
         both_neurons_observed_one_with_color=0                                  #
@@ -1039,8 +1048,14 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                 both_neurons_observed_one_with_color+=(                         #
                   not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
         if float(both_neurons_observed_one_with_color) != float(0):             #
-            test_stat_value=str(float(matches)/                                 #
-                              float(both_neurons_observed_one_with_color))      #
+            Po=float(matches)/float(both_neurons_observed_one_with_color)       #
+            if test_stat == 'percent_match':                                    #
+                test_stat_value=str(Po)                                         #
+            if test_stat == 'kappa':                                            #
+                if Pe != 1:                                                     #
+                    test_stat_value=str((Po-Pe)/(1-Pe))                         #
+                else:                                                           #
+                    test_stat_value='N/A'                                       #
         else:                                                                   #
             test_stat_value='N/A'                                               #
     elif (test_stat == 'sort_of_probibility_of_matches' or                      #
@@ -1575,7 +1590,9 @@ def add_two_simple_dics(simp_dic_1,simp_dic_2):                                 
                               simp_dic_2[neuron_match_name]['matches'])         #
     return return_dic                                                           #
 def finalize_dic(master_dic):                                                   #
-    if test_stat=='number_of_matches' or test_stat=='percent_match':            #
+    if (test_stat=='number_of_matches' or                                       #
+         test_stat=='percent_match' or                                          #
+         test_stat=='kappa'):                                                   #
         big_or_small_vals_are_good='big'                                        #
     elif (test_stat=='sort_of_probibility_of_matches' or                        #
           test_stat=='sort_of_prob_of_matches_normalized' or                    #
