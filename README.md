@@ -99,6 +99,7 @@ optional arguments:
                                 3:sort_of_prob_of_matches_normalized
                                 4:percent_match
                                 5:(n+k/n)*sum(probs)
+                                6:kappa
                         |
   -mh MULTIPLE_HYPOTHESIS_METHOD, --Multiple_hypothesis_method MULTIPLE_HYPOTHESIS_METHOD
                         This var inherits its testing method from
