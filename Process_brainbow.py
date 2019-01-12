@@ -36,6 +36,7 @@ included_hemisegments_path='Active_hemisegments.csv'                            
 exclude_color_layers=[]                                                         # These are neuron grouping layers that should not be used in the analysis. This allows you to keep a complex key file but maintain a simple analysis
 input_dir_path='.'+slash+'Input'+slash                                          # default input directory
 output_dir_path='.'+slash                                                       # default output directory
+for_color_prob_values_include_no_color_case=False                               # This var is used to affect the calculation of the probility of seeing a match in a particular color. If set to true, it the probility of a match in a certen color will be (# of times that color was observed)/(Total number of neurons observed including blanks). If False, blanks will be excluded from the denominator. This should not affect the outcomes very much, because it simply changes the relitive sizes of the color probilities.
 #################################################################################
 #                           parsing command line input                          #
 #################################################################################
@@ -217,6 +218,13 @@ parser.add_argument('-only_include_some_segments',                              
                          'directory or a -hemi_path to define the path for\n'   #
                          'it. When used, it will limit the search to only\n'    #
                          'the active hemisegments listed in the file.')         #
+parser.add_argument('-for_color_prob_values_include_no_color_case',             #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='If used, this will tweek the prob calculators to\n'   #
+                         'include blanks in the match prob calculations. This\n'#
+                         'does not mean that matches in the blank color\n'      #
+                         'counts as a match')                                   #
 args = parser.parse_args()                                                      #
 for var_name in args.__dict__.keys():                                           #
     var_value=getattr(args,var_name)                                            #
@@ -395,13 +403,16 @@ class basefunctions:                                                            
                                        float(self.total_neurons_with_any_color))#
                 self.prob_of_match_excluding_blanks+=excluding_blanks_prob**2   #
                 if excluding_blanks_prob != 0.0:                                #
-                    self.color_match_prob_dic[row]=excluding_blanks_prob**2     #
+                    if not for_color_prob_values_include_no_color_case:         #
+                        self.color_match_prob_dic[row]=excluding_blanks_prob**2 #
                     self.color_match_prob_list.append([row,                     #
                                                        excluding_blanks_prob])  #
             else:                                                               #
                 excluding_blanks_prob='N/A'                                     #
             including_blanks_prob=(float(colors_dic[row])/                      #
                                    float(self.total_neurons_observed))          #
+            if for_color_prob_values_include_no_color_case and row != '00000':  #
+                self.color_match_prob_dic[row]=including_blanks_prob**2         #
             if row != '00000':                                                  #
                 self.prob_of_match_including_blanks+=including_blanks_prob**2   #
             next_line=['"'+row+'"',                                             #
@@ -598,6 +609,7 @@ class basefunctions:                                                            
                                neurons_dic,neuron_layer):                       #
         neuron_1_ID=neuron_1.identifier                                         #
         neuron_2_ID=neuron_2.identifier                                         #
+        pair_identifier=neuron_1_ID+' to '+neuron_2_ID                          #
         try:                                                                    #
             self.flat_data_table                                                #
         except:                                                                 #
@@ -618,19 +630,23 @@ class basefunctions:                                                            
                                           coords_1,                             #
                                           coords_2,                             #
                                           color_match_prob_dic)                 #
-        if test_stat_value in pval_conversion_dic:                              #
-            proc_test_stat_val=test_stat_value                                  #
+        if (test_stat_value in pval_conversion_dic or                           #
+            float(test_stat_value) in pval_conversion_dic):                     #
+            if test_stat_value in pval_conversion_dic:                          #
+                proc_test_stat_val=test_stat_value                              #
+            else:                                                               #
+                proc_test_stat_val=float(test_stat_value)                       #
         else:                                                                   #
             proc_test_stat_val='something_random'                               #
             keys=only_numb_keys(pval_conversion_dic)                            #
-            if test_stat_value < min(keys):                                     #
+            if float(test_stat_value) < min(keys):                              #
                 proc_test_stat_val=min(keys)                                    #
-            elif test_stat_value > max(keys):                                   #
+            elif float(test_stat_value) > max(keys):                            #
                 proc_test_stat_val=max(keys)                                    #
             else:                                                               #
                 for key_id in range(0,len(keys)):                               #
-                    if (test_stat_value > keys[key_id] and                      #
-                            test_stat_value < keys[key_id+1]):                  #
+                    if (float(test_stat_value) > keys[key_id] and               #
+                            float(test_stat_value) < keys[key_id+1]):           #
                             if (test_stat=='number_of_matches' or               #
                                 test_stat=='percent_match' or                   #
                                 test_stat=='kappa'):                            #
@@ -640,6 +656,7 @@ class basefunctions:                                                            
                             test_stat=='(n+k/n)*sum(probs)'):                   #
                                 proc_test_stat_val=keys[key_id+1]               #
             if proc_test_stat_val == 'something_random':                        #
+                print(pair_identifier)                                          #
                 print(test_stat_value)                                          #
                 print(keys)                                                     #
                 assert proc_test_stat_val != 'something_random'                 #
@@ -928,6 +945,11 @@ def simp_color_match_prob(colors,color_match_prob_dic):                         
         if color_match_prob_dic[color] > return_val:                            #
             return_val=color_match_prob_dic[color]                              #
     return return_val                                                           #
+def matching_colors_rep_or_no_rep(line, coords_1,coords_2):                     #
+    if coords_2 == coords_1:                                                    #
+        return matching_colors_rep(line,coords_1)                               #
+    else:                                                                       #
+        return matching_colors_no_rep(line,coords_1,coords_2)                   #
 def matching_colors_no_rep(line,coords_1,coords_2):                             #
     sublist_1=[]                                                                #
     sublist_2=[]                                                                #
@@ -941,7 +963,22 @@ def matching_colors_no_rep(line,coords_1,coords_2):                             
         return 0                                                                #
     else:                                                                       #
         return 1                                                                #
-def not_matching_or_matching_colors_no_rep(line,coords_1,coords_2):             #
+def matching_colors_rep(line,coords):                                           #
+    sublist=[]                                                                  #
+    for coord in coords:                                                        #
+        if line[coord]!= '' and line[coord] != '00000':                         #
+            sublist.append(line[coord])                                         #
+    if any(sublist.count(x) > 1 for x in sublist):                              #
+        return 1                                                                #
+    else:                                                                       #
+        return 0                                                                #
+                                                                                #
+def either_neuron_has_color_rep_or_no_rep(line,coords_1,coords_2):              #
+    if coords_2 == coords_1:                                                    #
+        return either_neuron_has_color_rep(line,coords_1)                       #
+    else:                                                                       #
+        return either_neuron_has_color_no_rep(line,coords_1,coords_2)           #
+def either_neuron_has_color_no_rep(line,coords_1,coords_2):                     #
     sublist_1=[]                                                                #
     sublist_2=[]                                                                #
     sublist_1_pos=False                                                         #
@@ -961,6 +998,57 @@ def not_matching_or_matching_colors_no_rep(line,coords_1,coords_2):             
         return 1                                                                #
     else:                                                                       #
         return 0                                                                #
+def either_neuron_has_color_rep(line,coords):                                   #
+    sublist=[]                                                                  #
+    sublist_with_blanks=[]                                                      #
+    for coord in coords:                                                        #
+        if line[coord]!= '':                                                    #
+            sublist_with_blanks.append(line[coord])                             #
+            if line[coord] != '00000':                                          #
+                sublist.append(line[coord])                                     #
+    if len(sublist)>0 and len(sublist_with_blanks)>1:                           #
+        return 1                                                                #
+    else:                                                                       #
+        return 0                                                                #
+                                                                                #
+def both_neurons_have_color_rep_or_no_rep(line,coords_1,coords_2):              #
+    if coords_2 == coords_1:                                                    #
+        return both_neurons_have_color_rep(line,coords_1)                       #
+    else:                                                                       #
+        return both_neurons_have_color_no_rep(line,coords_1,coords_2)           #
+def both_neurons_have_color_no_rep(line,coords_1,coords_2):                     #
+    has_color_1=False                                                           #
+    has_color_2=False                                                           #
+    for coord in coords_1:                                                      #
+        if line[coord] != '' and line[coord] != '00000':                        #
+            has_color_1=True                                                    #
+    for coord in coords_2:                                                      #
+        if line[coord] != '' and line[coord] != '00000':                        #
+            has_color_2=True                                                    #
+    if has_color_1 and has_color_2:                                             #
+        return 1                                                                #
+    else:                                                                       #
+        return 0                                                                #
+def both_neurons_have_color_rep(line,coords):                                   #
+    sublist=[]                                                                  #
+    for coord in coords:                                                        #
+        if line[coord]!= '' and line[coord] != '00000':                         #
+            sublist.append(line[coord])                                         #
+    if len(sublist)>1:                                                          #
+        return 1                                                                #
+    else:                                                                       #
+        return 0                                                                #
+def matching_colors_prob_rep_or_no_rep(line,                                    #
+                                       coords_1,                                #
+                                       coords_2,                                #
+                                       color_match_prob_dic):                   #
+    if coords_2 == coords_1:                                                    #
+        return matching_colors_prob_rep(line,coords_1,color_match_prob_dic)     #
+    else:                                                                       #
+        return matching_colors_prob_rep(line,                                   #
+                                        coords_1,                               #
+                                        coords_2,                               #
+                                        color_match_prob_dic)                   #
 def matching_colors_prob_no_rep(line,coords_1,coords_2,color_match_prob_dic):   #
     sublist_1=[]                                                                #
     sublist_2=[]                                                                #
@@ -975,27 +1063,6 @@ def matching_colors_prob_no_rep(line,coords_1,coords_2,color_match_prob_dic):   
         return 1                                                                #
     else:                                                                       #
         return simp_color_match_prob(matches,color_match_prob_dic)              #
-def matching_colors_rep(line,coords):                                           #
-    sublist=[]                                                                  #
-    for coord in coords:                                                        #
-        if line[coord]!= '' and line[coord] != '00000':                         #
-            sublist.append(line[coord])                                         #
-    if any(sublist.count(x) > 1 for x in sublist):                              #
-        return 1                                                                #
-    else:                                                                       #
-        return 0                                                                #
-def not_matching_or_matching_colors_rep(line,coords):                           #
-    sublist=[]                                                                  #
-    sublist_with_blanks=[]                                                      #
-    for coord in coords:                                                        #
-        if line[coord]!= '':                                                    #
-            sublist_with_blanks.append(line[coord])                             #
-            if line[coord] != '00000':                                          #
-                sublist.append(line[coord])                                     #
-    if len(sublist)>0 and len(sublist_with_blanks)>1:                           #
-        return 1                                                                #
-    else:                                                                       #
-        return 0                                                                #
 def matching_colors_prob_rep(line,coords,color_match_prob_dic):                 #
     sublist=[]                                                                  #
     for coord in coords:                                                        #
@@ -1007,11 +1074,38 @@ def matching_colors_prob_rep(line,coords,color_match_prob_dic):                 
         return 1                                                                #
     else:                                                                       #
         return simp_color_match_prob(matches,color_match_prob_dic)              #
-def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          #
-    if coords_1 == coords_2:                                                    #
-        same_neuron = True                                                      #
+def both_observed_rep_or_no_rep(line,coords_1,coords_2):                        #
+    if coords_2 == coords_1:                                                    #
+        return both_observed_rep(line,coords_1)                                 #
     else:                                                                       #
-        same_neuron = False                                                     #
+        return both_observed_no_rep(line,coords_1,coords_2)                     #
+def both_observed_rep(line,coords_1):                                           #
+    if len(coords_1) == 1:                                                      #
+        return 0                                                                #
+    else:                                                                       #
+        non_blank=0                                                             #
+        for coord in coords_1:                                                  #
+            if line[coord] != '':                                               #
+                non_blank+=1                                                    #
+    if non_blank > 1:                                                           #
+        return 1                                                                #
+    else:                                                                       #
+        return 0                                                                #
+def both_observed_no_rep(line,coords_1,coords_2):                               #
+    coord_1_obs=False                                                           #
+    coord_2_obs=False                                                           #
+    for coord in coords_1:                                                      #
+        if line[coord] != '':                                                   #
+            coord_1_obs=True                                                    #
+    for coord in coords_2:                                                      #
+        if line[coord] != '':                                                   #
+            coord_2_obs=True                                                    #
+    if coord_1_obs and coord_2_obs:                                             #
+        return 1                                                                #
+    else:                                                                       #
+        return 0                                                                #
+                                                                                #
+def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          #
     if test_stat=='kappa':                                                      #
         Pe=float(0)                                                             #
         for color_key in color_match_prob_dic:                                  #
@@ -1023,32 +1117,26 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
     if test_stat == 'number_of_matches':                                        #
         matches=0                                                               #
         for row in input_table:                                                 #
-            if same_neuron:                                                     #
-                matches+=matching_colors_rep(row,coords_1)                      #
-                if include_randomized_match_data:                               #
-                    both_neurons_observed_one_with_color+=(                     #
-                              not_matching_or_matching_colors_rep(row,coords_1))#
-            else:                                                               #
-                matches+=matching_colors_no_rep(row,coords_1,coords_2)          #
-                if include_randomized_match_data:                               #
-                    both_neurons_observed_one_with_color+=(                     #
-                  not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
+            matches+=matching_colors_rep_or_no_rep(row,coords_1,coords_2)       #
+            if include_randomized_match_data:                                   #
+                both_neurons_observed_one_with_color+=(                         #
+                either_neuron_has_color_rep_or_no_rep(row,coords_1,coords_2))   #
         test_stat_value = matches                                               #
     elif test_stat == 'percent_match' or test_stat=='kappa':                    #
         test_stat_value='N/A'                                                   #
         matches=0                                                               #
-        both_neurons_observed_one_with_color=0                                  #
+        denominator_here=0                                                      #
         for row in input_table:                                                 #
-            if same_neuron:                                                     #
-                matches+=matching_colors_rep(row,coords_1)                      #
-                both_neurons_observed_one_with_color+=(                         #
-                              not_matching_or_matching_colors_rep(row,coords_1))#
+            matches+=matching_colors_rep_or_no_rep(row,coords_1,coords_2)       #
+            if for_color_prob_values_include_no_color_case:                     #
+                denominator_here+=(both_observed_rep_or_no_rep(row,             #
+                                                               coords_1,        #
+                                                               coords_2))       #
             else:                                                               #
-                matches+=matching_colors_no_rep(row,coords_1,coords_2)          #
-                both_neurons_observed_one_with_color+=(                         #
-                  not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
-        if float(both_neurons_observed_one_with_color) != float(0):             #
-            Po=float(matches)/float(both_neurons_observed_one_with_color)       #
+                denominator_here+=(                                             #
+                both_neurons_have_color_rep_or_no_rep(row,coords_1,coords_2))   #
+        if float(denominator_here) != float(0):                                 #
+            Po=float(matches)/float(denominator_here)                           #
             if test_stat == 'percent_match':                                    #
                 test_stat_value=str(Po)                                         #
             if test_stat == 'kappa':                                            #
@@ -1066,31 +1154,19 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
         sum_val=0                                                               #
         for row in input_table:                                                 #
             prob_temp=1                                                         #
-            if same_neuron:                                                     #
-                prob_temp=matching_colors_prob_rep(row,coords_1,                #
-                                                   color_match_prob_dic)        #
-                if test_stat == 'sort_of_prob_of_matches_normalized':           #
-                    k+=(not_matching_or_matching_colors_rep(row,coords_1)-      #
-                           matching_colors_rep(row,coords_1))                   #
-                if (include_randomized_match_data or                            #
-                    test_stat=='(n+k/n)*sum(probs)'):                           #
-                    matches+=matching_colors_rep(row,coords_1)                  #
-                    both_neurons_observed_one_with_color+=(                     #
-                              not_matching_or_matching_colors_rep(row,coords_1))#
-            else:                                                               #
-                prob_temp=matching_colors_prob_no_rep(row,                      #
-                                                      coords_1,                 #
-                                                      coords_2,                 #
-                                                      color_match_prob_dic)     #
-                if test_stat == 'sort_of_prob_of_matches_normalized':           #
-                    k+=(                                                        # 
-                 not_matching_or_matching_colors_no_rep(row,coords_1,coords_2)- #
-                           matching_colors_no_rep(row,coords_1,coords_2))       #
-                if (include_randomized_match_data or                            #
-                    test_stat=='(n+k/n)*sum(probs)'):                           #
-                    matches+=matching_colors_no_rep(row,coords_1,coords_2)      #
-                    both_neurons_observed_one_with_color+=(                     #
-                  not_matching_or_matching_colors_no_rep(row,coords_1,coords_2))#
+            prob_temp=matching_colors_prob_rep_or_no_rep(row,                   #
+                                                    coords_1,                   #
+                                                    coords_2,                   #
+                                                    color_match_prob_dic)       #
+            if test_stat == 'sort_of_prob_of_matches_normalized':               #
+                k+=(                                                            # 
+                either_neuron_has_color_rep_or_no_rep(row,coords_1,coords_2)-   #
+                        matching_colors_rep_or_no_rep(row,coords_1,coords_2))   #
+            if (include_randomized_match_data or                                #
+                test_stat=='(n+k/n)*sum(probs)'):                               #
+                matches+=matching_colors_rep_or_no_rep(row,coords_1,coords_2)   #
+                both_neurons_observed_one_with_color+=(                         #
+                either_neuron_has_color_rep_or_no_rep(row,coords_1,coords_2))   #
             if prob_temp != 1:                                                  #
                 prob=prob*prob_temp                                             # The prob_temp value is already squared
                 sum_val+=prob_temp                                              #
