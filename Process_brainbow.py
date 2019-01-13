@@ -1138,6 +1138,7 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                                                            coords_2)            #
                     dem+=1                                                      #
                     colors_1=[]                                                 #
+                    len_coords_1=0                                              #
                     for coord_1 in coords_1:                                    #
                         color=row[coord_1]                                      #
                         if (color not in color_dist_dic and                     # 
@@ -1145,10 +1146,16 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                             color_dist_dic[color]={}                            #
                             color_dist_dic[color]['neuron_1']=0                 #
                             color_dist_dic[color]['neuron_2']=0                 #
-                        if color != '00000' and color !='':                     #
-                            color_dist_dic[color]['neuron_1']+=float(1)/(       #
-                                                               float(           #
-                                                               len(coords_1)))  #
+                    if len_coords_1 != 0:                                       #
+                        for coord_1 in coords_1:                                #
+                            color=row[coord_1]                                  #
+                            if color != '00000' and color !='':                 #
+                                color_dist_dic[color]['neuron_1']+=float(1)/(   #
+                                                                   float(       #
+                                                                 len_coords_1)) #
+                    else:                                                       #
+                        dem=0                                                   #
+                    len_coords_2=0                                              #
                     for coord_2 in coords_2:                                    #
                         color=row[coord_2]                                      #
                         if (color not in color_dist_dic and                     #
@@ -1157,10 +1164,15 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                             color_dist_dic[color]={}                            #
                             color_dist_dic[color]['neuron_1']=0                 #
                             color_dist_dic[color]['neuron_2']=0                 #
-                        if color != '00000' and color !='':                     #
-                            color_dist_dic[color]['neuron_2']+=float(1)/(       #
-                                                               float(           #
-                                                               len(coords_2)))  #
+                    if len_coords_2 != 0:                                       #
+                        for coord_2 in coords_2:                                #
+                            color=row[coord_1]                                  #
+                            if color != '00000' and color !='':                 #
+                                color_dist_dic[color]['neuron_2']+=float(1)/(   #
+                                                                   float(       #
+                                                                 len_coords_2)) #
+                    else:                                                       #
+                        dem=0                                                   #
             if dem != 0:                                                        #
                 Pe=0                                                            #
                 Po=float(matches)/float(dem)                                    #
