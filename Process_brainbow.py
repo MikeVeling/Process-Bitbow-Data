@@ -1137,51 +1137,39 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                                                            coords_1,            #
                                                            coords_2)            #
                     dem+=1                                                      #
-                    colors_1=[]                                                 #
-                    len_coords_1=0                                              #
-                    for coord_1 in coords_1:                                    #
-                        color=row[coord_1]                                      #
-                        if (color not in color_dist_dic and                     # 
-                            color != '00000'):                                  #
-                            color_dist_dic[color]={}                            #
-                            color_dist_dic[color]['neuron_1']=0                 #
-                            color_dist_dic[color]['neuron_2']=0                 #
-                    if len_coords_1 != 0:                                       #
-                        for coord_1 in coords_1:                                #
-                            color=row[coord_1]                                  #
+                    for coord_set in [coords_1,coords_2]:                       #
+                        number_of_colors_in_set=0                               #
+                        if coord_set==coords_1:                                 #
+                            neuron_coords_name='neuron_1'                       #
+                        if coord_set==coords_2:                                 #
+                            neuron_coords_name='neuron_2'                       #
+                        how_many_coords_have_data=0                             #
+                        for coord in coord_set:                                 #
+                            color=row[coord]                                    #
                             if color != '00000' and color !='':                 #
-                                color_dist_dic[color]['neuron_1']+=float(1)/(   #
-                                                                   float(       #
-                                                                 len_coords_1)) #
-                    else:                                                       #
-                        dem=0                                                   #
-                    len_coords_2=0                                              #
-                    for coord_2 in coords_2:                                    #
-                        color=row[coord_2]                                      #
-                        if (color not in color_dist_dic and                     #
-                            color != '' and                                     #
-                            color != '00000'):                                  #
-                            color_dist_dic[color]={}                            #
-                            color_dist_dic[color]['neuron_1']=0                 #
-                            color_dist_dic[color]['neuron_2']=0                 #
-                    if len_coords_2 != 0:                                       #
-                        for coord_2 in coords_2:                                #
-                            color=row[coord_1]                                  #
-                            if color != '00000' and color !='':                 #
-                                color_dist_dic[color]['neuron_2']+=float(1)/(   #
-                                                                   float(       #
-                                                                 len_coords_2)) #
-                    else:                                                       #
-                        dem=0                                                   #
+                                number_of_colors_in_set+=1                      #
+                        assert number_of_colors_in_set > 0                      #
+                        for coord in coord_set:                                 #
+                            color=row[coord]                                    #
+                            if color != '00000' and color != '':                #
+                                if color not in color_dist_dic:                 #
+                                    color_dist_dic[color]={}                    #
+                                if (neuron_coords_name not in                   #
+                                    color_dist_dic[color]):                     #
+                                    color_dist_dic[color][neuron_coords_name]=0 #
+                                color_dist_dic[color][neuron_coords_name]+=(    #
+                                     float(1)/float(number_of_colors_in_set))   #
             if dem != 0:                                                        #
                 Pe=0                                                            #
                 Po=float(matches)/float(dem)                                    #
                 for color in color_dist_dic:                                    #
                     if color != '' and color != '00000':                        #
-                        Pe+=(float(color_dist_dic[color]['neuron_1'])/          #
-                             float(dem)*                                        #
-                             float(color_dist_dic[color]['neuron_2'])/          #
-                             float(dem))                                        #
+                        if ('neuron_1' in color_dist_dic[color] and             #
+                            'neuron_2' in color_dist_dic[color]):               #
+                            Pe+=(float(color_dist_dic[color]['neuron_1'])/      #
+                                 float(dem)*                                    #
+                                 float(color_dist_dic[color]['neuron_2'])/      #
+                                 float(dem))                                    #
             else:                                                               #
                 Pe=1                                                            #
                 Po=0                                                            #
