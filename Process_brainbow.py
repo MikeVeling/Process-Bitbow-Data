@@ -1768,6 +1768,8 @@ def finalize_dic(master_dic):                                                   
             if include_randomized_match_data:                                   #
                 final_dic[key]['totals']=master_dic[key]['totals']              #
                 final_dic[key]['matches']=master_dic[key]['matches']            #
+                if 'N/A' in final_dic[key]:                                     #
+                    final_dic[key]['N/A']=1                                     #
     return final_dic                                                            #
 def make_test_stat_dic_multithreaded(data_obj,                                  #
                                      itteration_print,                          #
