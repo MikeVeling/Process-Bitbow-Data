@@ -71,6 +71,8 @@ usage: Process_brainbow.py [-h] [-i INPUT_DIR_PATH] [-o OUTPUT_DIR_PATH]
                            [-random_only_colors]
                            [-silent_multithread_worker_search]
                            [-only_include_some_segments]
+                           [-for_color_prob_values_include_no_color_case]
+                           [-use_background_for_Pe_in_kappa]
 
 For processing Brainbow data.
 
@@ -186,6 +188,15 @@ optional arguments:
                         directory or a -hemi_path to define the path for
                         it. When used, it will limit the search to only
                         the active hemisegments listed in the file.
+  -for_color_prob_values_include_no_color_case
+                        If used, this will tweek the prob calculators to
+                        include blanks in the match prob calculations. This
+                        does not mean that matches in the blank color
+                        counts as a match
+  -use_background_for_Pe_in_kappa
+                        If used with kappa, the Pe kappa value will be
+                        calculated assuming all neurons have the same color
+                        distribution
 ```
 
 
