@@ -1112,6 +1112,10 @@ def both_observed_no_rep(line,coords_1,coords_2):                               
         return 0                                                                #
                                                                                 #
 def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          #
+    if (include_randomized_match_data or                                        #
+        test_stat=='(n+k/n)*sum(probs)'):                                       #
+        matches=0                                                               #
+        both_neurons_observed_one_with_color=0                                  #
     if test_stat=='kappa':                                                      #
         if use_background_for_Pe_in_kappa:                                      #
             Pe=float(0)                                                         #
@@ -1120,11 +1124,18 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
         else:                                                                   #
             color_dist_dic={}                                                   #
             dem=0                                                               #
+            matches=0                                                           #
             for row in input_table:                                             #
                 real_pair=both_neurons_have_color_rep_or_no_rep(row,            #
                                                                 coords_1,       #
                                                                 coords_2)       #
+                if include_randomized_match_data:                               #
+                    both_neurons_observed_one_with_color+=(                     #
+                   either_neuron_has_color_rep_or_no_rep(row,coords_1,coords_2))#
                 if real_pair == 1:                                              #
+                    matches+=matching_colors_rep_or_no_rep(row,                 #
+                                                           coords_1,            #
+                                                           coords_2)            #
                     dem+=1                                                      #
                     colors_1=[]                                                 #
                     for coord_1 in coords_1:                                    #
@@ -1152,6 +1163,7 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                                                                len(coords_2)))  #
             if dem != 0:                                                        #
                 Pe=0                                                            #
+                Po=float(matches)/float(dem)                                    #
                 for color in color_dist_dic:                                    #
                     if color != '' and color != '00000':                        #
                         Pe+=(float(color_dist_dic[color]['neuron_1'])/          #
@@ -1160,10 +1172,11 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                              float(dem))                                        #
             else:                                                               #
                 Pe=1                                                            #
-    if (include_randomized_match_data or                                        #
-        test_stat=='(n+k/n)*sum(probs)'):                                       #
-        matches=0                                                               #
-        both_neurons_observed_one_with_color=0                                  #
+                Po=0                                                            #
+            if Pe != 1:                                                         #
+                test_stat_value=str((Po-Pe)/(1-Pe))                             #
+            else:                                                               #
+                test_stat_value='N/A'                                           #
     if test_stat == 'number_of_matches':                                        #
         matches=0                                                               #
         for row in input_table:                                                 #
@@ -1172,12 +1185,15 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                 both_neurons_observed_one_with_color+=(                         #
                 either_neuron_has_color_rep_or_no_rep(row,coords_1,coords_2))   #
         test_stat_value = matches                                               #
-    elif test_stat == 'percent_match' or test_stat=='kappa':                    #
+    elif test_stat == 'percent_match':                                          #
         test_stat_value='N/A'                                                   #
         matches=0                                                               #
         denominator_here=0                                                      #
         for row in input_table:                                                 #
             matches+=matching_colors_rep_or_no_rep(row,coords_1,coords_2)       #
+            if include_randomized_match_data:                                   #
+                both_neurons_observed_one_with_color+=(                         #
+                either_neuron_has_color_rep_or_no_rep(row,coords_1,coords_2))   #
             if for_color_prob_values_include_no_color_case:                     #
                 denominator_here+=(both_observed_rep_or_no_rep(row,             #
                                                                coords_1,        #
@@ -1189,11 +1205,6 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
             Po=float(matches)/float(denominator_here)                           #
             if test_stat == 'percent_match':                                    #
                 test_stat_value=str(Po)                                         #
-            if test_stat == 'kappa':                                            #
-                if Pe != 1:                                                     #
-                    test_stat_value=str((Po-Pe)/(1-Pe))                         #
-                else:                                                           #
-                    test_stat_value='N/A'                                       #
         else:                                                                   #
             test_stat_value='N/A'                                               #
     elif (test_stat == 'sort_of_probibility_of_matches' or                      #
