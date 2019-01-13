@@ -21,7 +21,7 @@ include_date_in_flaten=False                                                    
 include_larva_in_flaten=False                                                   # Boolean allowing for the generation of a set of flat files containing all larva level data in the larva level output
 include_randomized_match_data=True                                              # Boolean allowing for the inclusion of randomized match data in the by_the_colors.csv output. This is useful for comparing match numbers to the number of times neurons randomly matched
 random_only_colors=False                                                        # Boolean determining if only neurons with color are randomized
-test_stat='sort_of_prob_of_matches_normalized'                                  # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_normalized' or 'percent_match' or 'kappa'
+test_stat='kappa'                                                               # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_normalized' or 'percent_match' or 'kappa'
 Multiple_hypothesis_method='fdr_bh'                                             # This var inherits its testing method from statsmodels.stats.multitest.multipletests
 alpha_level=0.05                                                                # This var sets the alpha level for statsmodels.stats.multitest.multipletests
 number_of_p_val_itterations=100                                                 # This is the number of iterations used to generate the background distribution. It is set to 100 so the code can run on most computers, but I recommend at least 100,000 for real analysis. 
@@ -37,6 +37,7 @@ exclude_color_layers=[]                                                         
 input_dir_path='.'+slash+'Input'+slash                                          # default input directory
 output_dir_path='.'+slash                                                       # default output directory
 for_color_prob_values_include_no_color_case=False                               # This var is used to affect the calculation of the probility of seeing a match in a particular color. If set to true, it the probility of a match in a certen color will be (# of times that color was observed)/(Total number of neurons observed including blanks). If False, blanks will be excluded from the denominator. This should not affect the outcomes very much, because it simply changes the relitive sizes of the color probilities.
+use_background_for_Pe_in_kappa=False                                            # When true, the Pe for the kappa score is based on the colors of all neurons, not just the colors in that neuron pair.
 #################################################################################
 #                           parsing command line input                          #
 #################################################################################
@@ -74,9 +75,8 @@ parser.add_argument('-ts',                                                      
                     '--test_stat',                                              #
                     action='store',                                             #
                     type=int,                                                   #
-                    help='What test stat do you want to use(default is 3\n'     #
-                         '"sort_of_prob_of_matches_normalized" that \n'         #
-                         'was used in the paper)?\n\n'+                         #
+                    help='What test stat do you want to use(default is 6\n'     #
+                         '"kappa" that was used in the paper)?\n\n'+            #
                     '\t1:number_of_matches\n'+                                  #
                     '\t2:sort_of_probibility_of_matches\n'+                     #
                     '\t3:sort_of_prob_of_matches_normalized\n'+                 #
@@ -225,6 +225,12 @@ parser.add_argument('-for_color_prob_values_include_no_color_case',             
                          'include blanks in the match prob calculations. This\n'#
                          'does not mean that matches in the blank color\n'      #
                          'counts as a match')                                   #
+parser.add_argument('-use_background_for_Pe_in_kappa',                          #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='If used with kappa, the Pe kappa value will be \n'    #
+                         'calculated assuming all neurons have the same color\n'#
+                         'distribution')                                        #
 args = parser.parse_args()                                                      #
 for var_name in args.__dict__.keys():                                           #
     var_value=getattr(args,var_name)                                            #
@@ -1107,9 +1113,53 @@ def both_observed_no_rep(line,coords_1,coords_2):                               
                                                                                 #
 def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          #
     if test_stat=='kappa':                                                      #
-        Pe=float(0)                                                             #
-        for color_key in color_match_prob_dic:                                  #
-            Pe+=float(color_match_prob_dic[color_key])                          #
+        if use_background_for_Pe_in_kappa:                                      #
+            Pe=float(0)                                                         #
+            for color_key in color_match_prob_dic:                              #
+                Pe+=float(color_match_prob_dic[color_key])                      #
+        else:                                                                   #
+            color_dist_dic={}                                                   #
+            dem=0                                                               #
+            for row in input_table:                                             #
+                real_pair=both_neurons_have_color_rep_or_no_rep(row,            #
+                                                                coords_1,       #
+                                                                coords_2)       #
+                if real_pair == 1:                                              #
+                    dem+=1                                                      #
+                    colors_1=[]                                                 #
+                    for coord_1 in coords_1:                                    #
+                        color=row[coord_1]                                      #
+                        if (color not in color_dist_dic and                     # 
+                            color != '00000'):                                  #
+                            color_dist_dic[color]={}                            #
+                            color_dist_dic[color]['neuron_1']=0                 #
+                            color_dist_dic[color]['neuron_2']=0                 #
+                        if color != '00000' and color !='':                     #
+                            color_dist_dic[color]['neuron_1']+=float(1)/(       #
+                                                               float(           #
+                                                               len(coords_1)))  #
+                    for coord_2 in coords_2:                                    #
+                        color=row[coord_2]                                      #
+                        if (color not in color_dist_dic and                     #
+                            color != '' and                                     #
+                            color != '00000'):                                  #
+                            color_dist_dic[color]={}                            #
+                            color_dist_dic[color]['neuron_1']=0                 #
+                            color_dist_dic[color]['neuron_2']=0                 #
+                        if color != '00000' and color !='':                     #
+                            color_dist_dic[color]['neuron_2']+=float(1)/(       #
+                                                               float(           #
+                                                               len(coords_2)))  #
+            if dem != 0:                                                        #
+                Pe=0                                                            #
+                for color in color_dist_dic:                                    #
+                    if color != '' and color != '00000':                        #
+                        Pe+=(float(color_dist_dic[color]['neuron_1'])/          #
+                             float(dem)*                                        #
+                             float(color_dist_dic[color]['neuron_2'])/          #
+                             float(dem))                                        #
+            else:                                                               #
+                Pe=1                                                            #
     if (include_randomized_match_data or                                        #
         test_stat=='(n+k/n)*sum(probs)'):                                       #
         matches=0                                                               #
