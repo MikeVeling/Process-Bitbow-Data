@@ -90,9 +90,8 @@ optional arguments:
                         Note this is required if the
                         -only_include_some_segments is used
   -ts TEST_STAT, --test_stat TEST_STAT
-                        What test stat do you want to use(default is 3
-                        "sort_of_prob_of_matches_normalized" that
-                        was used in the paper)?
+                        What test stat do you want to use(default is 6
+                        "kappa" that was used in the paper)?
 
                                 1:number_of_matches
                                 2:sort_of_probibility_of_matches
