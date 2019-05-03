@@ -673,7 +673,7 @@ class basefunctions:                                                            
         else:                                                                   #
             proc_test_stat_val='something_random'                               #
             keys=only_numb_keys(pval_conversion_dic)                            #
-            if float(test_stat_value) < min(keys):                              #
+            if float(test_stat_value) < min(keys):                              # If this hold up, check if you changed the test stat inbetween wipes of the output directory
                 proc_test_stat_val=min(keys)                                    #
             elif float(test_stat_value) > max(keys):                            #
                 proc_test_stat_val=max(keys)                                    #
@@ -1349,9 +1349,14 @@ def the_opener(file_path):                                                      
     return return_list                                                          #
     return return_list                                                          #
 def the_saver(output_path, list_of_lists):                                      #
-    with open(output_path,'w') as csvfile:                                      # add , newline='' for improved python 3 compatability
-        for row in list_of_lists:                                               #
-            csv.writer(csvfile, dialect='excel').writerow(row)                  #
+    if sys.version_info[0] < 3:                                                 #
+        with open(output_path,'w') as csvfile:                                  # 
+            for row in list_of_lists:                                           #
+                csv.writer(csvfile, dialect='excel').writerow(row)              #
+    else:                                                                       #
+        with open(output_path,'w', newline='') as csvfile:                      #
+            for row in list_of_lists:                                           #
+                csv.writer(csvfile, dialect='excel').writerow(row)              #  
 def is_number(value):                                                           #
     try:                                                                        #
         if not math.isnan(float(value)):                                        #
