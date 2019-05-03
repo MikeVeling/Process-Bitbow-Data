@@ -1,7 +1,12 @@
 #################################################################################
+#                             Timeing code run length                           #
+#################################################################################
+import time                                                                     #
+start_time = time.time()                                                        #
+#################################################################################
 #                                defineing the OS                               #
 #################################################################################
-import os                                                                       #
+import os, sys                                                                  #
 cwd=os.getcwd()                                                                 #
 if '\\' in cwd:                                                                 #
     slash='\\'                                                                  #
@@ -20,7 +25,7 @@ include_conditions_in_flaten=False                                              
 include_date_in_flaten=False                                                    # Boolean allowing for the generation of a set of flat files containing all larva level data in the date level output
 include_larva_in_flaten=False                                                   # Boolean allowing for the generation of a set of flat files containing all larva level data in the larva level output
 include_randomized_match_data=True                                              # Boolean allowing for the inclusion of randomized match data in the by_the_colors.csv output. This is useful for comparing match numbers to the number of times neurons randomly matched
-random_only_colors=False                                                        # Boolean determining if only neurons with color are randomized
+random_only_colors=True                                                         # Boolean determining if only neurons with color are randomized The code is a bit broken when it is turned off so I will leave it on. Currently the toggle doesnt do anything because it is always on
 test_stat='kappa'                                                               # This can be 'number_of_matches' or 'sort_of_probibility_of_matches' or 'sort_of_prob_of_matches_normalized' or 'percent_match' or 'kappa'
 Multiple_hypothesis_method='fdr_bh'                                             # This var inherits its testing method from statsmodels.stats.multitest.multipletests
 alpha_level=0.05                                                                # This var sets the alpha level for statsmodels.stats.multitest.multipletests
@@ -38,6 +43,7 @@ input_dir_path='.'+slash+'Input'+slash                                          
 output_dir_path='.'+slash                                                       # default output directory
 for_color_prob_values_include_no_color_case=False                               # This var is used to affect the calculation of the probility of seeing a match in a particular color. If set to true, it the probility of a match in a certen color will be (# of times that color was observed)/(Total number of neurons observed including blanks). If False, blanks will be excluded from the denominator. This should not affect the outcomes very much, because it simply changes the relitive sizes of the color probilities.
 use_background_for_Pe_in_kappa=False                                            # When true, the Pe for the kappa score is based on the colors of all neurons, not just the colors in that neuron pair.
+dont_consider_mixed_blanks_in_kappa=False                                       # When false, mixed blank pairs will be counted for Pe and Po. This will lower the absolute value of kappa, this will also set for_color_prob_values_include_no_color_case to true.
 #################################################################################
 #                           parsing command line input                          #
 #################################################################################
@@ -203,8 +209,11 @@ parser.add_argument('-random_only_colors',                                      
                     help='|\nwhen set, python will only randomize the data from'#
                          '\nneurons that have color. This is a somewhat more\n' #
                          'conservative analysis because color expressing\n'     #
-                         'neurons are maintained and was used in the paper\n'   #
-                         'but is turned off by default (recommended to use)')   #
+                         'neurons are maintained and was used in the paper.\n'  #
+                         'by default it is turned on as the code broke when\n'  #
+                         'turned off. I can try to fix if nessasary but it \n'  #
+                         'is a reccomended setting (adding this flag does \n'   #
+                         'nothing)')                                            #
 parser.add_argument('-silent_multithread_worker_search',                        #
                     action='store_const',                                       #
                     const=True,                                                 #
@@ -224,13 +233,25 @@ parser.add_argument('-for_color_prob_values_include_no_color_case',             
                     help='If used, this will tweek the prob calculators to\n'   #
                          'include blanks in the match prob calculations. This\n'#
                          'does not mean that matches in the blank color\n'      #
-                         'counts as a match')                                   #
+                         'counts as a match. Also see\n'                        #
+                         'dont_consider_mixed_blanks_in_kappa as that\n'        #
+                         'overwrites this var')                                 #
 parser.add_argument('-use_background_for_Pe_in_kappa',                          #
                     action='store_const',                                       #
                     const=True,                                                 #
                     help='If used with kappa, the Pe kappa value will be \n'    #
                          'calculated assuming all neurons have the same color\n'#
                          'distribution')                                        #
+parser.add_argument('-dont_consider_mixed_blanks_in_kappa',                     #
+                    action='store_const',                                       #
+                    const=True,                                                 #
+                    help='If used with kappa, the kappa value Pe and Po will \n'#
+                         'ignore cases where one out of the pair of neurons \n' #
+                         'has a blank color. This will increse the absolute \n' #
+                         'value of kappa. This must be used if you want, \n'    #
+                         'for_color_prob_values_include_no_color_case as it \n' #
+                         'will be set to True overiding other settings as it \n'#
+                         'is required')                                         #
 args = parser.parse_args()                                                      #
 for var_name in args.__dict__.keys():                                           #
     var_value=getattr(args,var_name)                                            #
@@ -269,6 +290,10 @@ for var_name in args.__dict__.keys():                                           
                       ' It must be a 1,2,3,4,5, or 6 only (see help for'+       #
                        'details)')                                              #
                 sys.exit(1)                                                     #
+if not dont_consider_mixed_blanks_in_kappa:                                    #
+    consider_mixed_blanks_in_kappa=True                                         #
+if consider_mixed_blanks_in_kappa:                                              #
+    for_color_prob_values_include_no_color_case=True                            #
 #################################################################################
 #                             Defineing my objects                              #
 #################################################################################
@@ -636,6 +661,9 @@ class basefunctions:                                                            
                                           coords_1,                             #
                                           coords_2,                             #
                                           color_match_prob_dic)                 #
+        if test_stat_value == 'N/A' and 'N/A' not in pval_conversion_dic:       #
+            print(pval_conversion_dic.keys())                                   #
+            print([neuron_1.identifier,neuron_2.identifier])                    #
         if (test_stat_value in pval_conversion_dic or                           #
             float(test_stat_value) in pval_conversion_dic):                     #
             if test_stat_value in pval_conversion_dic:                          #
@@ -730,7 +758,7 @@ class basefunctions:                                                            
         return final_dic                                                        #
 class condition(basefunctions):                                                 #
     def __init__(self,fine_name):                                               #
-        assert isinstance(fine_name, basestring)                                #
+        assert isinstance(fine_name, str)                                       #
         self.file_name=fine_name                                                #
         self.name=fine_name                                                     #
         self.dates=[]                                                           #
@@ -745,7 +773,7 @@ class condition(basefunctions):                                                 
                           'condition, just so you know',SyntaxWarning)          #
 class date(basefunctions):                                                      #
     def __init__(self,date_str,condition_obj):                                  #
-        assert isinstance(date_str, basestring)                                 #
+        assert isinstance(date_str, str)                                        #
         self.date=date_str                                                      #
         self.name=date_str                                                      #
         assert isinstance(condition_obj,condition)                              #
@@ -763,7 +791,7 @@ class date(basefunctions):                                                      
                           'date object, just so you know.',SyntaxWarning)       #
 class larva(basefunctions):                                                     #
     def __init__(self,larva_str,date_obj):                                      #
-        assert isinstance(larva_str, basestring)                                #
+        assert isinstance(larva_str, str)                                       #
         self.larva=larva_str                                                    #
         self.name=larva_str                                                     #
         assert isinstance(date_obj,date)                                        #
@@ -781,7 +809,7 @@ class larva(basefunctions):                                                     
                           'larva object, just so you know.',SyntaxWarning)      #
 class hemisegment:                                                              #
     def __init__(self,hemisegment_str,larva_obj):                               #
-        assert isinstance(hemisegment_str, basestring)                          #
+        assert isinstance(hemisegment_str, str)                                 #
         self.hemisegment=hemisegment_str                                        #
         assert isinstance(larva_obj,larva)                                      #
         self.larva=larva_obj                                                    #
@@ -790,7 +818,7 @@ class hemisegment:                                                              
         self.neuron_data=neuron_data                                            #
 class neuron:                                                                   #
     def __init__(self,neuron_identifier,layer):                                 #
-        assert isinstance(hemisegment_str, basestring)                          #
+        assert isinstance(hemisegment_str, str)                                 #
         self.identifier=neuron_identifier                                       #
         self.layer=layer                                                        #
         self.col_IDs=[]                                                         #
@@ -1119,16 +1147,25 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
     if test_stat=='kappa':                                                      #
         if use_background_for_Pe_in_kappa:                                      #
             Pe=float(0)                                                         #
+            prob_of_blank=float(1)                                              #
             for color_key in color_match_prob_dic:                              #
                 Pe+=float(color_match_prob_dic[color_key])                      #
+                prob_of_blank-=float(color_match_prob_dic[color_key])**0.5      #
+            if consider_mixed_blanks_in_kappa:                                  #
+                Pe=Pe/(float(1)-prob_of_blank**2)                               #
         else:                                                                   #
             color_dist_dic={}                                                   #
             dem=0                                                               #
             matches=0                                                           #
             for row in input_table:                                             #
-                real_pair=both_neurons_have_color_rep_or_no_rep(row,            #
-                                                                coords_1,       #
-                                                                coords_2)       #
+                if consider_mixed_blanks_in_kappa:                              #
+                    real_pair=either_neuron_has_color_rep_or_no_rep(row,        #
+                                                                    coords_1,   #
+                                                                    coords_2)   #
+                else:                                                           #
+                    real_pair=both_neurons_have_color_rep_or_no_rep(row,        #
+                                                                    coords_1,   #
+                                                                    coords_2)   #
                 if include_randomized_match_data:                               #
                     both_neurons_observed_one_with_color+=(                     #
                    either_neuron_has_color_rep_or_no_rep(row,coords_1,coords_2))#
@@ -1143,15 +1180,18 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                             neuron_coords_name='neuron_1'                       #
                         if coord_set==coords_2:                                 #
                             neuron_coords_name='neuron_2'                       #
-                        how_many_coords_have_data=0                             #
                         for coord in coord_set:                                 #
                             color=row[coord]                                    #
-                            if color != '00000' and color !='':                 #
+                            if ((color != '00000' or                            #
+                                 consider_mixed_blanks_in_kappa) and            #
+                                color !=''):                                    #
                                 number_of_colors_in_set+=1                      #
                         assert number_of_colors_in_set > 0                      #
                         for coord in coord_set:                                 #
                             color=row[coord]                                    #
-                            if color != '00000' and color != '':                #
+                            if ((color != '00000' or                            #
+                                 consider_mixed_blanks_in_kappa) and            #
+                                color != ''):                                   #
                                 if color not in color_dist_dic:                 #
                                     color_dist_dic[color]={}                    #
                                 if (neuron_coords_name not in                   #
@@ -1162,6 +1202,7 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
             if dem != 0:                                                        #
                 Pe=0                                                            #
                 Po=float(matches)/float(dem)                                    #
+                prob_of_blank=0                                                 #
                 for color in color_dist_dic:                                    #
                     if color != '' and color != '00000':                        #
                         if ('neuron_1' in color_dist_dic[color] and             #
@@ -1170,6 +1211,16 @@ def get_test_stat(input_table,coords_1,coords_2,color_match_prob_dic):          
                                  float(dem)*                                    #
                                  float(color_dist_dic[color]['neuron_2'])/      #
                                  float(dem))                                    #
+                    elif color == '00000' and (('neuron_1' in                   #
+                                                 color_dist_dic[color]) and     #
+                                                ('neuron_2' in                  #
+                                                 color_dist_dic[color])):       #
+                        prob_of_blank=(float(color_dist_dic[color]['neuron_1'])/#
+                                       float(dem)*                              #
+                                       float(color_dist_dic[color]['neuron_2'])/#
+                                       float(dem))                              #
+                if consider_mixed_blanks_in_kappa:                              #
+                    Pe=Pe/(1-prob_of_blank)                                     #
             else:                                                               #
                 Pe=1                                                            #
                 Po=0                                                            #
@@ -1285,8 +1336,9 @@ def find_col_ID(table,search_header):                                           
 def the_opener(file_path):                                                      #
     if '.csv' in file_path:                                                     #
         return_list=[]                                                          #
-        with open(file_path, 'rb') as csvfile:                                  #
-            for row in csv.reader(csvfile, dialect='excel'):                    #
+        with codecs.open(file_path, 'rU') as csvfile:                           #
+            reader=csv.reader(csvfile)                                          #
+            for row in reader:                                                  #
                 return_list.append(row)                                         #
     elif '.tsv' in file_path or '.txt' in file_path:                            #
         return_list=[]                                                          #
@@ -1295,8 +1347,9 @@ def the_opener(file_path):                                                      
             if row != '':                                                       #
                 return_list.append(row.split('\t'))                             #
     return return_list                                                          #
+    return return_list                                                          #
 def the_saver(output_path, list_of_lists):                                      #
-    with open(output_path,'wb') as csvfile:                                     #
+    with open(output_path,'w') as csvfile:                                      # add , newline='' for improved python 3 compatability
         for row in list_of_lists:                                               #
             csv.writer(csvfile, dialect='excel').writerow(row)                  #
 def is_number(value):                                                           #
@@ -1667,7 +1720,7 @@ def check_if_in(simple_hemisegment_str,included_segments):                      
 #################################################################################
 #                        multithreaded p_val functions                          #
 ################################################################################# 
-import multiprocessing, os, sys                                                 #
+import multiprocessing, os, sys, codecs                                         #
 from time import sleep                                                          #
 def _getThreads():                                                              #
     " Returns the number of available threads on a posix/win based system "     #
@@ -1703,7 +1756,8 @@ def add_two_simple_dics(simp_dic_1,simp_dic_2):                                 
             return_dic[neuron_match_name]={}                                    #
             data_from_1=simp_dic_1[neuron_match_name]                           #
             data_from_2=simp_dic_2[neuron_match_name]                           #
-            posible_values=list(set(data_from_1.keys()+data_from_2.keys()))     #
+            posible_values=list(set(list(data_from_1.keys())+                   #
+                                    list(data_from_2.keys())))                  #
             posible_values.remove('max_value')                                  #
             posible_values.remove('min_value')                                  #
             if include_randomized_match_data:                                   #
@@ -1744,7 +1798,7 @@ def finalize_dic(master_dic):                                                   
         if key != 'itterations':                                                #
             final_dic[key]={}                                                   #
             working_data=master_dic[key]                                        #
-            posible_values=working_data.keys()                                  #
+            posible_values=list(working_data.keys())                            #
             posible_values.remove('max_value')                                  #
             posible_values.remove('min_value')                                  #
             if include_randomized_match_data:                                   #
@@ -1897,7 +1951,7 @@ if __name__ == "__main__":                                                      
             included_segment_sets.append(next_line)                             #
     if included_segment_sets == []:                                             #
         included_segment_sets =[['']]                                           #
-    for included_segments_pre in included_segment_sets:                         #
+    for included_segments in included_segment_sets:                             #
         mkdir(input_dir_path)                                                   #
         if only_include_some_segments:                                          #
             working_output_dir_path=(output_dir_path+                           #
@@ -2068,4 +2122,11 @@ if __name__ == "__main__":                                                      
                                                 neuron_layer_key][              #
                                                 output_file_name][              #
                                                 data_header_text]               #
-                    the_saver(current_file_path,output)                         #
+             the_saver(current_file_path,output)                                #
+#################################################################################
+#                                Printing the time                              #
+#################################################################################
+    print("--- %s seconds ---" % (time.time() - start_time))                    #
+#################################################################################
+#                                       Fin                                     #
+#################################################################################
