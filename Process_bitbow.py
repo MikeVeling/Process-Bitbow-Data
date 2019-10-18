@@ -49,7 +49,7 @@ dont_consider_mixed_blanks_in_kappa=False                                       
 #################################################################################
 import argparse                                                                 #
 from argparse import RawTextHelpFormatter                                       #
-parser = argparse.ArgumentParser(description='For processing Brainbow data.',   #
+parser = argparse.ArgumentParser(description='For processing Bitbow data.',   #
                                  formatter_class=RawTextHelpFormatter)          #
 parser.add_argument('-i',                                                       #
                     '--input_dir_path',                                         #
@@ -1938,7 +1938,7 @@ def simplify_dic(rand_dic,neuron_pairs_name_dic,neuron_layer,itters):           
                 simp_dic[key][value]=data.count(value)                          #
     return simp_dic                                                             #
 #################################################################################
-#                      import brainbow data into objects                        #
+#                      import bitbow data into objects                          #
 #################################################################################
 if __name__ == "__main__":                                                      #
     included_segment_sets=[]                                                    # 
