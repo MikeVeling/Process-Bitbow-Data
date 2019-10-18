@@ -1775,8 +1775,17 @@ def add_two_simple_dics(simp_dic_1,simp_dic_2):                                 
                 if posible_value in simp_dic_2[neuron_match_name]:              #
                     count_of_value+=simp_dic_2[neuron_match_name][posible_value]#
                 return_dic[neuron_match_name][posible_value]=count_of_value     #
-            return_dic[neuron_match_name]['max_value']=max(posible_values)      #
-            return_dic[neuron_match_name]['min_value']=min(posible_values)      #
+            posible_values_min_max=list(posible_values)                         #
+            posible_values_min_max[:] = [x for x in posible_values_min_max      #
+                                                                  if x != 'N/A']#
+            if posible_values_min_max!= []:                                     #
+                return_dic[neuron_match_name]['max_value']=max(                 #
+                                                         posible_values_min_max)#
+                return_dic[neuron_match_name]['min_value']=min(                 #
+                                                         posible_values_min_max)#
+            else:                                                               #
+                return_dic[neuron_match_name]['max_value']='N/A'                #
+                return_dic[neuron_match_name]['min_value']='N/A'                #
             if include_randomized_match_data:                                   #
                 return_dic[neuron_match_name]['totals']=(                       #
                               simp_dic_1[neuron_match_name]['totals']+          #
@@ -1806,29 +1815,40 @@ def finalize_dic(master_dic):                                                   
             posible_values=list(working_data.keys())                            #
             posible_values.remove('max_value')                                  #
             posible_values.remove('min_value')                                  #
+            if 'N/A' in posible_values:                                         #
+                posible_values.remove('N/A')                                    #
+                have_NA=True                                                    #
             if include_randomized_match_data:                                   #
                 posible_values.remove('totals')                                 #
                 posible_values.remove('matches')                                #
             if big_or_small_vals_are_good == 'small':                           #
                 posible_values.sort()                                           #
+                if have_NA:                                                     #
+                    posible_values+=['N/A']                                     #
                 final_dic[key]['max_value']=posible_values[-1]                  #
                 final_dic[key]['min_value']=posible_values[0]                   #
             else:                                                               #
                 posible_values.sort(reverse=True)                               #
+                if have_NA:                                                     #
+                    posible_values+=['N/A']                                     #
                 final_dic[key]['max_value']=posible_values[0]                   #
                 final_dic[key]['min_value']=posible_values[-1]                  #
             running_total=0                                                     #
             for value in posible_values:                                        #
-                if value != 'max_value' and value != 'min_value':               #
-                    running_total+=master_dic[key][value]                       #
+                if value!='max_value'and value!='min_value' and value!= 'N/A':  #
+                    try:                                                        #
+                        running_total+=master_dic[key][value]                   #
+                    except:                                                     #
+                        print(master_dic)                                       #
+                        sys.exit()                                              #
                     final_dic[key][value]=(float(running_total)/                #
                                            float(itterations))                  #
-            assert running_total == itterations                                 #
+            assert running_total == itterations or have_NA                      #
             if include_randomized_match_data:                                   #
                 final_dic[key]['totals']=master_dic[key]['totals']              #
                 final_dic[key]['matches']=master_dic[key]['matches']            #
-                if 'N/A' in final_dic[key]:                                     #
-                    final_dic[key]['N/A']=1                                     #
+            if have_NA:                                                         #
+                final_dic[key]['N/A']=1                                         #
     return final_dic                                                            #
 def make_test_stat_dic_multithreaded(data_obj,                                  #
                                      itteration_print,                          #
@@ -1928,8 +1948,14 @@ def simplify_dic(rand_dic,neuron_pairs_name_dic,neuron_layer,itters):           
         else:                                                                   #
             data=float_list_special(rand_dic[key].split(','))                   #
         simp_dic[key]={}                                                        #
-        simp_dic[key]['max_value']=max(data)                                    #
-        simp_dic[key]['min_value']=min(data)                                    #
+        data_min_max=list(data)                                                 #
+        data_min_max[:] = [x for x in data_min_max if x != 'N/A']               #
+        if data_min_max != []:                                                  #
+            simp_dic[key]['max_value']=max(data_min_max)                        #
+            simp_dic[key]['min_value']=min(data_min_max)                        #
+        else:                                                                   #
+            simp_dic[key]['max_value']='N/A'                                    #
+            simp_dic[key]['min_value']='N/A'                                    #
         if include_randomized_match_data:                                       #
             simp_dic[key]['totals']=totals                                      #
             simp_dic[key]['matches']=matches                                    #
