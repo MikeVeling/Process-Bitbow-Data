@@ -1,14 +1,14 @@
-# Process-Brainbow-Data
-This git contains the script and sample input files for the Brainbow analysis associated with the Veling Et. Al. 2019 paper. The main analysis allows for an estimation of neuron lineage relationships based on Brainbow data. We used it to establish neuron relationships in <i>Drosophila melanogaster's</i> peripheral nervous system (PNS). 
+# Process-Bitbow-Data
+This git contains the script and sample input files for the Bitbow analysis associated with the Veling Et. Al. 2019 paper. The main analysis allows for an estimation of neuron lineage relationships based on Bitbow data. We used it to establish neuron relationships in <i>Drosophila melanogaster's</i> peripheral nervous system (PNS). 
 
-This estimation was based on data from a 5 color Brainbow system. This system stochastically labels neurons during development with one of 31 potential colors. This color is maintained through development to maturity. This allows us to identify related neurons based shared color expression. Neurons that express the same color likely developed from the same progenitor cell (early neuron precursor cells we labeled early in development). Observations of shared color frequencies allows us estimate how closely related sets of neurons are. These relationships can be used to estimate neuron developmental patterning as described in more details in the paper.
+This estimation was based on data from a 5 color Bitbow system. This system stochastically labels neurons during development with one of 31 potential colors. This color is maintained through development to maturity. This allows us to identify related neurons based shared color expression. Neurons that express the same color likely developed from the same progenitor cell (early neuron precursor cells we labeled early in development). Observations of shared color frequencies allows us estimate how closely related sets of neurons are. These relationships can be used to estimate neuron developmental patterning as described in more details in the paper.
 
 The following sections describe the input, execution, and outputs of this analysis. Feel free to contact [me](mailto:mike.veling@gmail.com) for further clarification if you would like.
 
 ## Input files for analysis
 
 ### Input (folder)
-This folder contains all the input files in CSV format for analysis. Each of these input files contain coded brainbow data for each of the neurons for each hemisegment analyzed. The first line describes the columns.
+This folder contains all the input files in CSV format for analysis. Each of these input files contain coded bitbow data for each of the neurons for each hemisegment analyzed. The first line describes the columns.
 
 <b>Date:</b> the date the larva was imaged
 <br><b>Larva #:</b> denotes the larva ID that was imaged on that given day 
@@ -23,7 +23,7 @@ This file converts between the 45 separate neurons in the input files and the ne
 ### Active_hemisegments.csv 
 This file allows you to limit the hemisemgments you would like to study. This allows you to test hypothesizes about development timing per hemisegment by limiting the data analysis to only particular hemisgements.
 
-### Process_brainbow.py
+### Process_bitbow.py
 code for running the analysis. More details will be provided in the next section.
 
 ## Running the code
@@ -40,15 +40,15 @@ python -m pip install multiprocessing
 Once these packages are installed to your python environment, you should be able to simply run the code with no arguments assuming it is in the same folder as the provided <b>Input</b> folder as well as the provided sample input files. The <b>key.csv</b> and <b>Active_hemisegments.csv</b> also needs to be present in that same folder as is in the git.
 
 ```
-python Process_brainbow.py
+python Process_bitbow.py
 ```
 
 There are also many varables that can be tweeked to process the data your way. Many of these varables are quite spicific and technical so do not hesitate to contact [me](mailto:mike.veling@gmail.com) about them.
 
 ```
-Process_brainbow.py -h
+Process_bitbow.py -h
 
-usage: Process_brainbow.py [-h] [-i INPUT_DIR_PATH] [-o OUTPUT_DIR_PATH]
+usage: Process_bitbow.py [-h] [-i INPUT_DIR_PATH] [-o OUTPUT_DIR_PATH]
                            [-k PATH_OF_KEY_FILE]
                            [-hemi_path INCLUDED_HEMISEGMENTS_PATH]
                            [-ts TEST_STAT] [-mh MULTIPLE_HYPOTHESIS_METHOD]
