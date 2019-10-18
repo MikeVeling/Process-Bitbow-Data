@@ -27,7 +27,7 @@ This file allows you to limit the hemisemgments you would like to study. This al
 code for running the analysis. More details will be provided in the next section.
 
 ## Running the code
-This code runs on python 2.7.11 with several dependency packages. These packages can be installed by running the following code in your terminal
+This code was originally written to run on python 2.7.11. However, this version runs on Python 3.7.3. with several dependency packages. These packages can be installed with [pip](https://pip.pypa.io/en/stable/installing/) by running the following code in your terminal
 
 ```
 python -m pip install json
