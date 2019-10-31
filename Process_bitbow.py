@@ -290,7 +290,7 @@ for var_name in args.__dict__.keys():                                           
                       ' It must be a 1,2,3,4,5, or 6 only (see help for'+       #
                        'details)')                                              #
                 sys.exit(1)                                                     #
-if not dont_consider_mixed_blanks_in_kappa:                                    #
+if not dont_consider_mixed_blanks_in_kappa:                                     #
     consider_mixed_blanks_in_kappa=True                                         #
 if consider_mixed_blanks_in_kappa:                                              #
     for_color_prob_values_include_no_color_case=True                            #
