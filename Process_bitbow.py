@@ -49,7 +49,7 @@ dont_consider_mixed_blanks_in_kappa=False                                       
 #################################################################################
 import argparse                                                                 #
 from argparse import RawTextHelpFormatter                                       #
-parser = argparse.ArgumentParser(description='For processing Bitbow data.',   #
+parser = argparse.ArgumentParser(description='For processing Bitbow data.',     #
                                  formatter_class=RawTextHelpFormatter)          #
 parser.add_argument('-i',                                                       #
                     '--input_dir_path',                                         #
